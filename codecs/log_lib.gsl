@@ -1,0 +1,116 @@
+.template 0
+# Library functions
+
+function log_level_to_value (level)
+    if my.level = "ERROR"
+        return 1
+    elsif my.level = "WARN"
+        return 2
+    elsif my.level = "INFO"
+        return 3
+    elsif my.level = "DEBUG"
+        return 4
+    elsif my.level = "TRACE"
+        return 5
+    else
+        return -1
+    endif
+endfunction
+
+function verify_format_and_setup ()
+    if !(count (root.) = 1)
+        echo "E: The main log XML element is a sigleton"
+        return -1
+    endif
+    if !defined (log.length)
+        echo "E: Logger length not defined"
+        return -1
+    endif
+    if !defined (log.level)
+        log.level = "INFO"
+        echo "I: Setting log level to $(LOG.LEVEL)"
+    endif
+    log.level_v = log_level_to_value (log.level)
+    f = file.open (filename)
+    log.prefix = file.basename (f.name)
+    file.close (f)
+    if log.level_v = -1
+        echo "E: Wrong log level $(LOG.LEVEL)"
+        return -1
+    endif
+    if count (log.msg) > 255    #0xFF reserved for diadnostic events
+        echo "E: Too many messages defined"
+        return -1
+    endif
+    for msg
+        msg.uid = item () - 1
+        bsize = 0
+        if count (msg.arg) = 0
+            log.has_no_args = log.has_no_args + 1 ? 1
+        endif
+        if !defined (msg.id)
+            echo "E: The id for message '$(msg.id:no)' not set"
+            return -1
+        endif
+        if count (log.msg, m.id = msg.id, m) > 1
+            echo "E: Duplicate message with id '$(msg.id:no)'"
+            return -1
+        endif
+        if !defined (msg.level)
+            echo "E: The log level for message '$(msg.id:no)' not set"
+            return -1
+        else
+            msg.level_v = log_level_to_value (msg.level)
+            if msg.level_v = -1
+                echo "E: Wrong log level $(msg.LEVEL) at '$(msg.id:no)'"
+                return -1
+            endif
+        endif
+        if !defined (msg.format)
+            echo "E: The log format for message '$(msg.id:no)' not set"
+            return -1
+        endif
+        for arg
+            if !defined (arg.size)
+                echo "E: Missing argument size in message '$(msg.id:no)'"
+                return -1
+            else
+                bsize = bsize + arg.size
+            endif
+            if !defined (arg.name)
+                echo "E: Missing argument name in message '$(msg.id:no)'"
+                return -1
+            endif
+            if arg.type = "number" | arg.type = "enum"
+                if arg.size < 1 | arg.size > 8
+                    echo "E: Wrong argument size in message '$(msg.id:no)'"
+                    return -1
+                endif
+                if arg.size = 3 | arg.size = 5 | arg.size = 6 | arg.size = 7
+                    echo "E: Wrong argument size in message '$(msg.id:no)'"
+                    return -1
+                endif
+            else    
+                echo "E: Wrong argument type '$(arg.type:no)'"
+                return -1
+            endif
+            if arg.type = "enum"
+                c = count (log.enum, enum.name = arg.name)
+                if c = 0
+                    echo "E: Missing enum define referenced in message '$(msg.id:no)'"
+                    return -1
+                endif
+            endif
+        endfor    
+        msg.bsize = bsize
+    endfor
+    for enum
+        if count (log.enum, e.name = enum.name, e) > 1
+            echo "E: Duplicate enum name '$(enum.name:no)'"
+            return -1
+        endif
+    endfor
+    return 0
+endfunction
+
+endtemplate

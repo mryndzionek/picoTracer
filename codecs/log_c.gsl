@@ -1,0 +1,89 @@
+.template 0
+
+include "log_lib.gsl"
+
+s = verify_format_and_setup ()
+if s = -1
+    abort 'E: Code generation failed'
+endif
+
+endtemplate
+.
+.macro gen_fn_declr (msg)
+void log_$(log.prefix)_$(my.msg.id)(\
+.   for my.msg.arg
+.       if arg.type = "number" | arg.type = "enum"
+uint$(arg.size*8)_t \
+$(arg.name:no)\
+.           if !last (arg)
+, \
+.           endif
+.       endif
+.   endfor
+)\
+.endmacro
+.
+.output "../gen/include/log_$(log.prefix).h"
+#ifndef LOG_$(LOG.PREFIX)_H_INCLUDED
+#define LOG_$(LOG.PREFIX)_H_INCLUDED
+
+#include <stdint.h>
+#include <stddef.h>
+
+.for msg
+.   gen_fn_declr (msg)
+;
+.endfor
+size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
+
+#endif // LOG_$(LOG.PREFIX)_H_INCLUDED
+.
+.output "../gen/src/log_$(log.prefix).c"
+#include "log_$(log.prefix).h"
+
+#include "rb.h"
+#include "platform.h"
+
+static struct {
+    rb_t self;
+    uint8_t data_[$(log.length)];
+} _rb = {{ .capacity_ = $(log.length)}};
+
+.if log.has_no_args ?> 1
+static _log_$(log.prefix)_no_args(uint8_t uid)
+{
+    uint8_t tmp[5];
+    tmp[0] = uid;
+    *((uint32_t*)&(tmp[1])) = GET_TIMESTAMP;
+    (void)rb_write(&_rb.self, tmp, 5);
+}
+.endif
+
+.for msg
+.   gen_fn_declr (msg)
+
+{
+.   if count (msg.arg) = 0
+    _log_$(log.prefix)_no_args($(msg.uid));
+.   else
+.       if msg.level_v <= log.level_v
+    uint8_t tmp[$(5+msg.bsize)];
+    tmp[0] = $(msg.uid);
+    *((uint32_t*)&(tmp[1])) = GET_TIMESTAMP;
+.           index = 5    
+.           for arg
+    *((uint$(arg.size*8)_t*)(&tmp[$(index)])) = $(arg.name);
+.               index = index + arg.size    
+.           endfor
+    (void)rb_write(&_rb.self, tmp, $(5+msg.bsize));
+.       endif
+.   endif
+}
+
+.endfor
+size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes)
+{
+    size_t read;
+    read = rb_read(&_rb.self, data, bytes);
+    return read;
+}

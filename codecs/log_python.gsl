@@ -1,0 +1,83 @@
+.template 0
+
+include "log_lib.gsl"
+
+s = verify_format_and_setup ()
+if s = -1
+    abort 'E: Code generation failed'
+endif
+
+endtemplate
+.
+.macro gen_struct_format (msg)
+'= \
+.   for my.msg.arg as arg
+.       if arg.type = "number" | arg.type = "enum"
+.           if arg.size = 1
+ B \
+.           elsif arg.size = 2 
+ H \
+.           elsif arg.size = 4
+ I \
+.           elsif arg.size = 8
+ L \
+.           endif
+.       endif
+.   endfor
+'\
+.endmacro
+.
+.macro gen_enum_dict (msg)
+.   if count (my.msg.arg, arg.type = "enum", arg) > 0
+, { \
+.       for my.msg.arg as arg where arg.type = "enum"
+$(item (arg) - 1): _log_$(arg.name)_enum\
+.           if !last ()
+, \
+.           endif
+.       endfor
+ }\
+.   endif
+.endmacro
+.
+.output "../gen/python/Log$(log.prefix:Neat).py"
+
+import sys
+import struct
+import binascii
+import Log
+
+class Log$(log.prefix:Neat)(Log.Log):
+
+.for enum
+    _log_$(enum.name)_enum = {
+.   for entry
+        $(entry.key:): '$(entry.value:)',
+.   endfor
+    };
+
+.endfor
+    _log_map = {
+.for msg
+        # Message: $(msg.id:)
+        $(msg.uid): Log.MsgDecoder('$(msg.LEVEL)', '$(msg.format:)', \
+.   gen_struct_format (msg)
+.   gen_enum_dict (msg)
+),
+
+.endfor
+    };
+
+if len(sys.argv) == 2:
+    in_f = open(sys.argv[1], 'rb')
+    out_f = open(sys.argv[1] + ".csv", 'wb')
+
+    try:
+        log = Log$(log.prefix:Neat).decode_file(in_f, out_f)
+    except:
+        in_f.close()
+        out_f.close()
+        raise
+else:
+    print "Please provide a filename as first argument"
+

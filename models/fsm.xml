@@ -1,0 +1,26 @@
+<log level = "DEBUG" length="256">
+    
+    <enum name = "state">
+        <entry key = "0x0001" value = "M1_DISABLED"/>
+        <entry key = "0x0002" value = "M1_ENABLED"/>
+        <entry key = "0x0003" value = "M1_ACTIVE"/>
+        <entry key = "0x0004" value = "M1_IDLE"/>
+        <entry key = "0x0005" value = "M1_BUSY"/>
+    </enum>
+
+    <msg id = "state_entry" level="DEBUG" format = "enter: {}">
+        <arg name = "state" type = "enum" size ="2"/>
+    </msg>
+
+    <msg id = "state_exit" level="DEBUG" format = "exit : {}">
+        <arg name = "state" type = "enum" size ="2"/>
+    </msg>
+
+    <msg id = "error" level="ERROR" format = "The values are out of range {} < {}">
+        <arg name = "threshold" type = "number" size ="2"/>
+        <arg name = "alarm" type = "number" size ="4"/>
+    </msg>
+
+    <msg id = "machine_init" level="INFO" format = "Module started"/>
+    <msg id = "machine_deinit" level="INFO" format = "Module cleanup"/>
+</log>
