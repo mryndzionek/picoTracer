@@ -12,11 +12,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 export PATH=../codecs:$PATH
-if ! [ -e "../gen" ];then
-	mkdir -p ../gen/src
-	mkdir -p ../gen/include
-	mkdir -p ../gen/python
-fi
 gsl -q -script:log_c $1
+gsl -q -script:log_tests $1
 gsl -q -script:log_python $1
 exit $?

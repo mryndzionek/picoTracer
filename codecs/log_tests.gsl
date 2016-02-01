@@ -1,0 +1,116 @@
+.template 0
+
+include "log_lib.gsl"
+
+s = verify_format_and_setup ()
+if s = -1
+    abort 'E: Code generation failed'
+endif
+
+endtemplate
+.
+.macro output_hex_range (size)
+0x\
+.   while my.size > 0
+FF\
+.       my.size = my.size - 1
+.   endwhile
+.endmacro
+.
+.
+.output "../gen/tests/log_$(log.prefix)_test.c"
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+
+#include "log_$(log.prefix).h"
+#include "config.h"
+
+#define LOG_INFO(M, ...) fprintf(stderr, "[INFO] (%d) " M \
+"\\n", __LINE__, ##__VA_ARGS__)
+
+#define BLOCK_SIZE                      (10)
+#define ITER_SIZE                      (100)
+
+#define NUMBER_SEED     (0xAAAAAAAAAAAAAAAA)
+
+.for enum where defined (enum.used)
+// Test array for enum '$(enum.name)'
+static const uint$(enum.size * 8)_t _e_$(enum.name)[] = {
+.   for entry
+    $(entry.key:),   // $(entry.value:)
+.   endfor
+};
+
+.endfor
+static void write_block(FILE *fp)
+{
+    size_t block = BLOCK_SIZE;
+    uint8_t tmp[BLOCK_SIZE];
+
+    while(block == BLOCK_SIZE)
+    {    
+        block = log_$(log.prefix)_get(tmp, BLOCK_SIZE);
+        fwrite(tmp, 1, block, fp);
+    }
+
+    fflush(fp);
+}
+
+static void update_seed(uint64_t *seed, uint8_t n)
+{
+    uint8_t i;
+
+    for(i=0; i<8; i++)
+    {
+        *((uint8_t *)seed + i) ^= *((uint8_t *)seed + (7-i)) | (1 << (n % 8)) | (1<<i);
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    LOG_INFO("Starting test: log_$(log.prefix)_test.csv version %s", VERSION_STRING);
+    LOG_INFO("This test will output 'log_$(log.prefix)_test.out' on successful run");
+
+    FILE *fp;
+    uint8_t i;
+    uint64_t seed = NUMBER_SEED;
+
+    fp = fopen("log_$(log.prefix)_test.out", "wb");
+    if(fp)
+    {
+        for(i=0; i<ITER_SIZE; i++)
+        {
+            update_seed(&seed, i);
+.for msg
+            log_$(log.prefix)_$(msg.id)(\
+.   for arg
+.       if arg.type = "number"
+seed & \
+.           output_hex_range (arg.size)
+.           if !last()
+, \
+.           endif
+.      elsif arg.type = "enum"
+_e_$(arg.name)[seed % $(arg.length)]\
+.           if !last()
+, \
+.           endif
+.      endif
+.   endfor
+);
+            update_seed(&seed, i);
+.endfor
+            write_block(fp);
+        }
+        fclose(fp);
+    }
+    else
+    {   
+        LOG_INFO("Unable to open output file: %s", strerror(errno));
+        return 1;
+    }
+    return 0;
+}
+.

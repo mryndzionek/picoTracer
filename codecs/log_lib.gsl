@@ -71,6 +71,21 @@ function verify_format_and_setup ()
             return -1
         endif
         for arg
+            if arg.type = "enum"
+                c = count (log.enum, enum.name = arg.name)
+                if c = 0
+                    echo "E: Missing enum define referenced in message '$(msg.id:no)'"
+                    return -1
+                elsif c > 1    
+                    echo "E: Multiple enums with the same name defined ('$(arg.name)')"
+                    return -1
+                endif
+                for log.enum where enum.name = arg.name
+                    arg.size = enum.size
+                    arg.length = count (enum.)
+                    enum.used = 1
+                endfor
+            endif
             if !defined (arg.size)
                 echo "E: Missing argument size in message '$(msg.id:no)'"
                 return -1

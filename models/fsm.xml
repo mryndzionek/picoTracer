@@ -1,6 +1,6 @@
 <log level = "DEBUG" length="256">
     
-    <enum name = "state">
+    <enum name = "state" size = "2">
         <entry key = "0x0001" value = "M1_DISABLED"/>
         <entry key = "0x0002" value = "M1_ENABLED"/>
         <entry key = "0x0003" value = "M1_ACTIVE"/>
@@ -8,15 +8,20 @@
         <entry key = "0x0005" value = "M1_BUSY"/>
     </enum>
 
+    <enum name = "unused" size = "1">
+        <entry key = "0x01" value = "UNUSED_1"/>
+        <entry key = "0x02" value = "UNUSED_2"/>
+    </enum>    
+
     <msg id = "state_entry" level="DEBUG" format = "enter: {}">
-        <arg name = "state" type = "enum" size ="2"/>
+        <arg name = "state" type = "enum" />
     </msg>
 
     <msg id = "state_exit" level="DEBUG" format = "exit : {}">
-        <arg name = "state" type = "enum" size ="2"/>
+        <arg name = "state" type = "enum" />
     </msg>
 
-    <msg id = "error" level="ERROR" format = "The values are out of range {} < {}">
+    <msg id = "error" level="ERROR" format = "The values are out of range 0x{:02X} < 0x{:02X}">
         <arg name = "threshold" type = "number" size ="2"/>
         <arg name = "alarm" type = "number" size ="4"/>
     </msg>

@@ -9,7 +9,7 @@ endif
 
 endtemplate
 .
-.macro gen_fn_declr (msg)
+.macro gen_c_fn_declr (msg)
 void log_$(log.prefix)_$(my.msg.id)(\
 .   for my.msg.arg
 .       if arg.type = "number" | arg.type = "enum"
@@ -31,7 +31,7 @@ $(arg.name:no)\
 #include <stddef.h>
 
 .for msg
-.   gen_fn_declr (msg)
+.   gen_c_fn_declr (msg)
 ;
 .endfor
 size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
@@ -50,7 +50,7 @@ static struct {
 } _rb = {{ .capacity_ = $(log.length)}};
 
 .if log.has_no_args ?> 1
-static _log_$(log.prefix)_no_args(uint8_t uid)
+static void _log_$(log.prefix)_no_args(uint8_t uid)
 {
     uint8_t tmp[5];
     tmp[0] = uid;
@@ -60,7 +60,7 @@ static _log_$(log.prefix)_no_args(uint8_t uid)
 .endif
 
 .for msg
-.   gen_fn_declr (msg)
+.   gen_c_fn_declr (msg)
 
 {
 .   if count (msg.arg) = 0
