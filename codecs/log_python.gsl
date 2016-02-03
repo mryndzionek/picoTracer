@@ -45,6 +45,7 @@ $(item (arg) - 1): _log_$(arg.name)_enum\
 import sys
 import struct
 import binascii
+import logging
 import Log
 
 class Log$(log.prefix:Neat)(Log.Log):
@@ -68,12 +69,17 @@ class Log$(log.prefix:Neat)(Log.Log):
 .endfor
     };
 
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M:%S',
+                    filemode='w')
+
 if len(sys.argv) == 2:
     in_f = open(sys.argv[1], 'rb')
     out_f = open(sys.argv[1] + ".csv", 'wb')
 
     try:
-        log = Log$(log.prefix:Neat).decode_file(in_f, out_f)
+        Log$(log.prefix:Neat).decode_file(in_f, out_f)
     except:
         in_f.close()
         out_f.close()

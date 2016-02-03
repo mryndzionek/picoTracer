@@ -44,18 +44,50 @@ size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
 #include "rb.h"
 #include "platform.h"
 
+#define END_FLAG           (0x7E)
+#define ESCAPE_BYTE        (0x7D)
+
+#define ENCODE_NUM_1(_b, _v) \\
+    if ((_v == END_FLAG) || (_v == ESCAPE_BYTE)) { \\
+        *(_b++) = ESCAPE_BYTE; \\
+        *(_b++) = _v ^ 0x20; \\
+     } else { \\
+        *(_b++) = _v; \\
+    }
+
+#define ENCODE_NUM_2(_b, _v) \\
+    ENCODE_NUM_1(_b, _v); \\
+    ENCODE_NUM_1(_b, (_v >> 8));
+
+
+#define ENCODE_NUM_4(_b, _v) \\
+    ENCODE_NUM_2(_b, (_v)); \\
+    _v >>= 16; \\
+    ENCODE_NUM_2(_b, (_v));
+
+#define ENCODE_NUM_8(_b, _v) \\
+    ENCODE_NUM_4(_b, (_v)); \\
+    _v >>= 16 \\
+    ENCODE_NUM_4(_b, (_v));
+
 static struct {
     rb_t self;
     uint8_t data_[$(log.length)];
 } _rb = {{ .capacity_ = $(log.length)}};
 
+static uint8_t log_$(log.prefix)_counter;
+
 .if log.has_no_args ?> 1
 static void _log_$(log.prefix)_no_args(uint8_t uid)
 {
-    uint8_t tmp[5];
-    tmp[0] = uid;
-    *((uint32_t*)&(tmp[1])) = GET_TIMESTAMP;
-    (void)rb_write(&_rb.self, tmp, 5);
+    uint8_t tmp[13], *b = tmp;
+    uint32_t ts = GET_TIMESTAMP;
+    ENCODE_NUM_1(b, log_$(log.prefix)_counter);
+    log_$(log.prefix)_counter++;
+    ENCODE_NUM_1(b, uid);
+    ENCODE_NUM_4(b, ts);
+    *(b++) = END_FLAG;
+    (void)rb_write(&_rb.self, tmp, b-tmp);
 }
 .endif
 
@@ -67,15 +99,17 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
     _log_$(log.prefix)_no_args($(msg.uid));
 .   else
 .       if msg.level_v <= log.level_v
-    uint8_t tmp[$(5+msg.bsize)];
-    tmp[0] = $(msg.uid);
-    *((uint32_t*)&(tmp[1])) = GET_TIMESTAMP;
-.           index = 5    
+    uint8_t tmp[$(2*(6+msg.bsize)+1)], *b = tmp;
+    uint32_t ts = GET_TIMESTAMP;
+    ENCODE_NUM_1(b, log_$(log.prefix)_counter);
+    log_$(log.prefix)_counter++;
+    ENCODE_NUM_1(b, $(msg.uid));
+    ENCODE_NUM_4(b, ts);
 .           for arg
-    *((uint$(arg.size*8)_t*)(&tmp[$(index)])) = $(arg.name);
-.               index = index + arg.size    
+    ENCODE_NUM_$(arg.size)(b, $(arg.name));
 .           endfor
-    (void)rb_write(&_rb.self, tmp, $(5+msg.bsize));
+    *(b++) = END_FLAG;
+    (void)rb_write(&_rb.self, tmp, b-tmp);
 .       endif
 .   endif
 }

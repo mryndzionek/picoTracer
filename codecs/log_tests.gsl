@@ -31,7 +31,7 @@ FF\
 "\\n", __LINE__, ##__VA_ARGS__)
 
 #define BLOCK_SIZE                      (10)
-#define ITER_SIZE                      (100)
+#define ITER_SIZE                       (100)
 
 #define NUMBER_SEED     (0xAAAAAAAAAAAAAAAA)
 
@@ -44,15 +44,16 @@ static const uint$(enum.size * 8)_t _e_$(enum.name)[] = {
 };
 
 .endfor
-static void write_block(FILE *fp)
+static void write_block(FILE *fp, size_t n)
 {
     size_t block = BLOCK_SIZE;
     uint8_t tmp[BLOCK_SIZE];
 
-    while(block == BLOCK_SIZE)
+    while ((block == BLOCK_SIZE) && (n > 0))
     {    
         block = log_$(log.prefix)_get(tmp, BLOCK_SIZE);
         fwrite(tmp, 1, block, fp);
+        n--;
     }
 
     fflush(fp);
@@ -102,7 +103,7 @@ _e_$(arg.name)[seed % $(arg.length)]\
 );
             update_seed(&seed, i);
 .endfor
-            write_block(fp);
+            write_block(fp, i*3);
         }
         fclose(fp);
     }

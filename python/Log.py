@@ -1,4 +1,7 @@
+import sys
 import struct
+import logging
+import re
 
 class MsgDecoder(object):
     def __init__(self, level, format, structure, enums = {}):
@@ -19,53 +22,85 @@ class MsgDecoder(object):
 class Log(object):
 
     @classmethod
-    def decode(cls, data):
-        pos = 0
-        log = [];
-
-        while len(data[pos:]) >= 5:
-
-            overflow = False
-
-            uid = ord(data[pos])
-            if uid == 0xFF:
-                log.append((True,))
-                return log, data[pos+1:]
-                
-            if uid in cls._log_map:
-                pos = pos + 1
-
-                timestamp = struct.unpack_from('I', data, pos)[0]
-                pos = pos + 4
-
-                s = cls._log_map.get(uid)
-                if len(data[pos:]) >= s.size:
-                    l = (timestamp,) + s.decode(data[pos:])
-                    log.append(l)
-                    pos = pos + s.size
-                else:
-                    pos = pos - 5
-                    break
+    def _split(cls, data):
+    
+        groups = data.split('\x7E')    
+        escaped = []
+        for group in groups:
+            s = re.split('[\x7d](.)', group)
+            if len(s) > 1:
+                print [s]
+                for i,j,k in zip(s[0::3], s[1::3], s[2::3]):
+                    g = bytearray(i)
+                    g.append(ord(j[0])^0x20)
+                    g.extend(k)
+                    escaped = escaped + [g]
+                    logging.debug ("Escaping seq. form group: " + str([group]))
             else:
-                raise Exception('Wrong key value: ' + str(uid))
+                escaped = escaped + [group]
 
-        return log, data[pos:]
+        return escaped
+
+
+    @classmethod
+    def _parse(cls, frame):
+
+        if len (frame) >= 6:
+            cnt = frame[0]
+            uid = frame[1]
+            timestamp = struct.unpack_from('I', frame, 2)[0]
+
+            if cnt == 0:
+                print [frame]
+
+            if uid in cls._log_map:
+                decoder = cls._log_map.get(uid)
+                if len (frame[6:]) >= decoder.size:
+                    l = (cnt,) + (timestamp,) + decoder.decode(frame[6:])
+                    return True, l, frame[6+decoder.size:]
+                else:
+                    return False, None, frame
+            else:
+                return False, None, bytearray(())
+
+        else:
+            return False, None, frame
+        
+
+    @classmethod
+    def decode(cls, rest, data):
+        log = []
+
+        logging.debug ("Decoding data: " + str([data]))    
+
+        frames = cls._split(data)
+        logging.debug("After splitting: " + str(frames))
+
+        rest.extend(frames[0])
+        frames[0] = rest
+
+        for frame in frames:
+            logging.debug ("Processing frame: " + str([frame]))
+
+            s, l, rest = cls._parse(bytearray(frame))
+            if s:
+                log.append(l)
+
+        return log, rest
             
     @classmethod
     def decode_file(cls, in_file, out_file, block = 10):
 
-        rest = ''
+        rest = bytearray(())
         i = 0
 
-        data = in_file.read(block)
+        data = bytearray(in_file.read(block))
         while data:
-
-            l, rest = cls.decode(rest + data)
+            
+            l, rest = cls.decode(rest, data)
             data = in_file.read(block)
             for msg in l:
-                if len(msg) == 1:
-                    out_file.write('--- Overflow !!! Missing data possible ---\n')
-                else:
-                    out_file.write('{0}, {1:#0{2}x}, {3}, {4}\n'.format(i, msg[0], 10, msg[1], msg[2]))
-                    i = i + 1
-
+                    out_file.write('{0}, {1:#0{2}x}, {3}, {4}\n'.format(msg[0], msg[1], 10, msg[2], msg[3]))
+                    if (msg[0] - i) > 1:
+                        logging.warn("Possible logs discontinuity detected")
+                    i = msg[0]

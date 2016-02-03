@@ -17,11 +17,6 @@ size_t rb_write(rb_t *rb, const uint8_t *data, size_t bytes)
     if (bytes == 0) return 0;
 
     size_t capacity = rb->capacity_;
-    if(bytes > (capacity - rb->size_))
-    {
-        rb->overflow_ = true;
-        return 0;
-    }
 
     if (bytes <= capacity - rb->end_index_)
     {
@@ -38,7 +33,13 @@ size_t rb_write(rb_t *rb, const uint8_t *data, size_t bytes)
         rb->end_index_ = size_2;
     }
 
-    rb->size_ += bytes;
+    if(bytes > (capacity - rb->size_))
+    {
+        rb->beg_index_ = rb->end_index_ + 1;
+        rb->size_ = capacity;
+    } else {
+        rb->size_ += bytes;
+    }
     return bytes;
 }
 
@@ -65,11 +66,5 @@ size_t rb_read(rb_t *rb, uint8_t *data, size_t bytes)
     }
 
     rb->size_ -= bytes_to_read;
-    if(rb->overflow_)
-    {
-        *(rb->data_ + rb->end_index_++) = 0xFF;
-        rb->size_++;
-        rb->overflow_ = false;
-    }
     return bytes_to_read;
 }

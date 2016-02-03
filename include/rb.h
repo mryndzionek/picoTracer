@@ -3,12 +3,10 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 typedef struct {
     size_t beg_index_, end_index_, size_;
     size_t const capacity_;
-    bool overflow_;
     uint8_t data_[0];
 } rb_t;
 
