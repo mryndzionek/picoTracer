@@ -1,6 +1,7 @@
 import sys
 import struct
 import logging
+import binascii
 import re
 
 class MsgDecoder(object):
@@ -21,6 +22,12 @@ class MsgDecoder(object):
 
 class Log(object):
 
+
+    @classmethod
+    def _format_hex(cls, msg):
+        m = binascii.hexlify(msg)
+        return ' '.join(m[i:i+2] for i in range(0, len(m), 2))
+   
     @classmethod
     def _split(cls, data):
     
@@ -35,7 +42,7 @@ class Log(object):
                     g.append(ord(j[0])^0x20)
                     g.extend(k)
                     escaped = escaped + [g]
-                    logging.debug ("Escaping seq. form group: " + str([group]))
+                    logging.debug ("Escaping seq. form group: " + cls._format_hex(group))
             else:
                 escaped = escaped + [group]
 
@@ -80,7 +87,7 @@ class Log(object):
         frames[0] = rest
 
         for frame in frames:
-            logging.debug ("Processing frame: " + str([frame]))
+            logging.debug ("Processing frame: " + cls._format_hex(frame))
 
             s, l, rest = cls._parse(bytearray(frame))
             if s:

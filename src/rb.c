@@ -35,7 +35,7 @@ size_t rb_write(rb_t *rb, const uint8_t *data, size_t bytes)
 
     if(bytes > (capacity - rb->size_))
     {
-        rb->beg_index_ = rb->end_index_ + 1;
+        rb->beg_index_ = rb->end_index_;
         rb->size_ = capacity;
     } else {
         rb->size_ += bytes;
