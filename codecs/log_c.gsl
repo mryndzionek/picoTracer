@@ -80,7 +80,8 @@ static uint8_t _log_$(log.prefix)_crc(uint8_t *data, uint8_t len)
 {
     uint8_t crc = 0, i;
     uint8_t s = (data[0] == ESCAPE_BYTE) ? 2 : 1;
-    
+
+.if ! defined (log.crc)
     for(i = s; i < len; i++)
     {
         if(data[i] == ESCAPE_BYTE)
@@ -92,6 +93,9 @@ static uint8_t _log_$(log.prefix)_crc(uint8_t *data, uint8_t len)
     }
 
     return ~crc;
+.else
+    return crc_$(log.crc:)(&data[s], len);
+.endif    
 }
 
 .if log.has_no_args ?> 1
