@@ -1,4 +1,4 @@
-<log level = "DEBUG" length="128">
+<log level = "DEBUG" length="256">
     
     <enum name = "state" size = "2">
         <entry key = "0x0001" value = "M1_DISABLED"/>

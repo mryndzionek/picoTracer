@@ -78,8 +78,9 @@ if len(sys.argv) == 2:
     in_f = open(sys.argv[1], 'rb')
     out_f = open(sys.argv[1] + ".csv", 'wb')
 
+    logger = Log$(log.prefix:Neat)()
     try:
-        Log$(log.prefix:Neat).decode_file(in_f, out_f)
+        logger.decode_file(in_f, out_f)
     except:
         in_f.close()
         out_f.close()

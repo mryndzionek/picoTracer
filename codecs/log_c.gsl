@@ -59,7 +59,6 @@ size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
     ENCODE_NUM_1(_b, _v); \\
     ENCODE_NUM_1(_b, (_v >> 8));
 
-
 #define ENCODE_NUM_4(_b, _v) \\
     ENCODE_NUM_2(_b, (_v)); \\
     _v >>= 16; \\
