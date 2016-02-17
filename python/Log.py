@@ -118,7 +118,6 @@ class Log(object):
         return log
             
     def decode_file(self, in_file, out_file, block = 10):
-
         i = 0
         
         # read data from file one block at a time
