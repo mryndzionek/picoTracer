@@ -76,15 +76,36 @@ static struct {
 
 static uint8_t log_$(log.prefix)_counter;
 
+static uint8_t _log_$(log.prefix)_crc(uint8_t *data, uint8_t len)
+{
+    uint8_t crc = 0, i;
+    uint8_t s = (data[0] == ESCAPE_BYTE) ? 2 : 1;
+    
+    for(i = s; i < len; i++)
+    {
+        if(data[i] == ESCAPE_BYTE)
+        {
+            crc += (data[++i] ^ 0x20);
+        }
+        else    
+            crc += data[i];   
+    }
+
+    return ~crc;
+}
+
 .if log.has_no_args ?> 1
 static void _log_$(log.prefix)_no_args(uint8_t uid)
 {
-    uint8_t tmp[13], *b = tmp;
+    uint8_t tmp[15], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
+    uint8_t crc;
     ENCODE_NUM_1(b, log_$(log.prefix)_counter);
     log_$(log.prefix)_counter++;
     ENCODE_NUM_1(b, uid);
     ENCODE_NUM_4(b, ts);
+    crc = _log_$(log.prefix)_crc(tmp, b-tmp);
+    ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb.self, tmp, b-tmp);
 }
@@ -98,8 +119,10 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
     _log_$(log.prefix)_no_args($(msg.uid));
 .   else
 .       if msg.level_v <= log.level_v
-    uint8_t tmp[$(2*(6+msg.bsize)+1)], *b = tmp;
+    uint8_t tmp[$(2*(7+msg.bsize)+1)], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
+    uint8_t crc;
+
     ENCODE_NUM_1(b, log_$(log.prefix)_counter);
     log_$(log.prefix)_counter++;
     ENCODE_NUM_1(b, $(msg.uid));
@@ -107,6 +130,8 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
 .           for arg
     ENCODE_NUM_$(arg.size)(b, $(arg.name));
 .           endfor
+    crc = _log_$(log.prefix)_crc(tmp, b-tmp);
+    ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb.self, tmp, b-tmp);
 .       endif

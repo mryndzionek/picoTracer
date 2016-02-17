@@ -36,17 +36,29 @@ class Log(object):
         for group in groups:
             s = re.split('[\x7d](.)', group)
             if len(s) > 1:
-                print [s]
                 for i,j,k in zip(s[0::3], s[1::3], s[2::3]):
                     g = bytearray(i)
                     g.append(ord(j[0])^0x20)
                     g.extend(k)
                     escaped = escaped + [g]
-                    logging.debug ("Escaping seq. form group: " + self._format_hex(group))
+                    logging.debug ("Escaping seq. form group: " + self._format_hex(group) + " -> " + self._format_hex(g))
             else:
                 escaped = escaped + [group]
 
         return escaped
+
+    def _crc_check(self, data, expected_crc):
+            
+
+        logging.debug ("Computing CRC on: " + self._format_hex(data))
+        crc = reduce(lambda x, y: x+y, data)        
+        crc = (~crc) & 0xFF
+
+        if crc == expected_crc:
+            return True
+        else:
+            logging.warn("CRC error: " + hex(crc) + " expected : " + hex(expected_crc))
+            return False
 
 
     def _parse(self, frame):
@@ -56,14 +68,15 @@ class Log(object):
             uid = frame[1]
             timestamp = struct.unpack_from('I', frame, 2)[0]
 
-            if cnt == 0:
-                print [frame]
-
             if uid in self._log_map:
                 decoder = self._log_map.get(uid)
-                if len (frame[6:]) >= decoder.size:
-                    l = (cnt,) + (timestamp,) + decoder.decode(frame[6:])
-                    return True, l, frame[6+decoder.size:]
+                if len (frame[6:]) >= decoder.size+1:
+                    crc = frame[6+decoder.size]
+                    if self._crc_check(frame[1:-1], crc):
+                        l = (cnt,) + (timestamp,) + decoder.decode(frame[6:])
+                        return True, l, frame[7+decoder.size:]
+                    else:
+                        return False, None, bytearray(())
                 else:
                     return False, None, frame
             else:
@@ -79,16 +92,17 @@ class Log(object):
     def decode(self, data):
         log = []
 
-        logging.debug ("Decoding data: " + str([data]))    
+        logging.debug ("Decoding data: " + self._format_hex(data))    
 
         frames = self._split(data)
-        logging.debug("After splitting: " + str(frames))
+        #logging.debug("After splitting: " + str(frames))
 
         self.tmp_buf.extend(frames[0])
         frames[0] = self.tmp_buf
 
         for frame in frames:
-            logging.debug ("Processing frame: " + self._format_hex(frame))
+            if frame:
+                logging.debug ("Processing frame: " + self._format_hex(frame))
 
             s, l, self.tmp_buf = self._parse(bytearray(frame))
             if s:
