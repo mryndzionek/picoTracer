@@ -23,6 +23,11 @@ class MsgDecoder(object):
 class Log(object):
 
     def __init__(self):
+        logging.basicConfig(level=logging.DEBUG,
+            format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
+            datefmt='%m-%d %H:%M:%S',
+            filemode='w')
+
         self.reset()
 
     def _format_hex(self, msg):

@@ -45,7 +45,6 @@ $(item (arg) - 1): _log_$(arg.name)_enum\
 import sys
 import struct
 import binascii
-import logging
 import Log
 
 class Log$(log.prefix:Neat)(Log.Log):
@@ -68,11 +67,6 @@ class Log$(log.prefix:Neat)(Log.Log):
 
 .endfor
     };
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
-                    datefmt='%m-%d %H:%M:%S',
-                    filemode='w')
 
 if len(sys.argv) == 2:
     in_f = open(sys.argv[1], 'rb')
