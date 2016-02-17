@@ -47,14 +47,14 @@ class Log(object):
 
         return escaped
 
-    def _crc_check(self, data, expected_crc):
-            
-
-        logging.debug ("Computing CRC on: " + self._format_hex(data))
+    def _default_crc(self, data):
         crc = reduce(lambda x, y: x+y, data)        
-        crc = (~crc) & 0xFF
+        return (~crc) & 0xFF
 
-        if crc == expected_crc:
+    def _crc_check(self, data, expected_crc):
+        logging.debug ("Computing CRC on: " + self._format_hex(data))
+
+        if self._default_crc(data) == expected_crc:
             return True
         else:
             logging.warn("CRC error: " + hex(crc) + " expected : " + hex(expected_crc))
