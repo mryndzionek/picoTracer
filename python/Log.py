@@ -59,7 +59,9 @@ class Log(object):
     def _crc_check(self, data, expected_crc):
         logging.debug ("Computing CRC on: " + self._format_hex(data))
 
-        if self._default_crc(data) == expected_crc:
+        crc = self._default_crc(data)
+
+        if crc == expected_crc:
             return True
         else:
             logging.warn("CRC error: " + hex(crc) + " expected : " + hex(expected_crc))
