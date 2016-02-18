@@ -36,7 +36,7 @@ _e_$(arg.name)[seed % $(arg.length)]\
 );
 .endmacro
 .
-.output "../gen/tests/log_$(log.prefix)_test.c"
+.output log.path+"../gen/tests/log_$(log.prefix)_test.c"
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>

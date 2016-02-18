@@ -23,7 +23,7 @@ $(arg.name:no)\
 )\
 .endmacro
 .
-.output "../gen/include/log_$(log.prefix).h"
+.output log.path+"../gen/include/log_$(log.prefix).h"
 #ifndef LOG_$(LOG.PREFIX)_H_INCLUDED
 #define LOG_$(LOG.PREFIX)_H_INCLUDED
 
@@ -38,7 +38,7 @@ size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
 
 #endif // LOG_$(LOG.PREFIX)_H_INCLUDED
 .
-.output "../gen/src/log_$(log.prefix).c"
+.output log.path+"../gen/src/log_$(log.prefix).c"
 #include "log_$(log.prefix).h"
 
 #include "rb.h"

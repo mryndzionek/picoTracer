@@ -33,6 +33,7 @@ function verify_format_and_setup ()
     log.level_v = log_level_to_value (log.level)
     f = file.open (filename)
     log.prefix = file.basename (f.name)
+    log.path = f.path
     file.close (f)
     if log.level_v = -1
         echo "E: Wrong log level $(LOG.LEVEL)"

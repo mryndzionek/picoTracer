@@ -40,7 +40,7 @@ $(item (arg) - 1): _log_$(arg.name)_enum\
 .   endif
 .endmacro
 .
-.output "../gen/python/Log$(log.prefix:Neat).py"
+.output log.path+"../gen/python/Log$(log.prefix:Neat).py"
 
 import sys
 import struct
