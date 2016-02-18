@@ -17,6 +17,24 @@ FF\
 .   endwhile
 .endmacro
 .
+.macro output_msg(msg)
+log_$(log.prefix)_$(my.msg.id)(\
+.   for my.msg.arg as arg
+.       if arg.type = "number"
+seed & \
+.           output_hex_range (arg.size)
+.           if !last()
+, \
+.           endif
+.      elsif arg.type = "enum"
+_e_$(arg.name)[seed % $(arg.length)]\
+.           if !last()
+, \
+.           endif
+.      endif
+.   endfor
+);
+.endmacro
 .
 .output "../gen/tests/log_$(log.prefix)_test.c"
 #include <stdio.h>
@@ -31,7 +49,8 @@ FF\
 "\\n", __LINE__, ##__VA_ARGS__)
 
 #define BLOCK_SIZE                      (10)
-#define ITER_SIZE                       (100)
+.iters = log.length / log.bsize
+#define ITER_SIZE                       ($(math.floor(iters)))
 
 #define NUMBER_SEED     (0xAAAAAAAAAAAAAAAA)
 
@@ -85,26 +104,12 @@ int main(int argc, char *argv[])
         {
             update_seed(&seed, i);
 .for msg
-            log_$(log.prefix)_$(msg.id)(\
-.   for arg
-.       if arg.type = "number"
-seed & \
-.           output_hex_range (arg.size)
-.           if !last()
-, \
-.           endif
-.      elsif arg.type = "enum"
-_e_$(arg.name)[seed % $(arg.length)]\
-.           if !last()
-, \
-.           endif
-.      endif
-.   endfor
-);
+            \
+.   output_msg(msg)
             update_seed(&seed, i);
 .endfor
-            write_block(fp, i*3);
         }
+        write_block(fp, ITER_SIZE*$(log.bsize)/10);
         fclose(fp);
     }
     else

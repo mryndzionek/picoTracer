@@ -42,9 +42,10 @@ function verify_format_and_setup ()
         echo "E: Too many messages defined"
         return -1
     endif
+    log.bsize = 0
     for msg
         msg.uid = item () - 1
-        bsize = 0
+        _bsize = 0
         if count (msg.arg) = 0
             log.has_no_args = log.has_no_args + 1 ? 1
         endif
@@ -90,7 +91,7 @@ function verify_format_and_setup ()
                 echo "E: Missing argument size in message '$(msg.id:no)'"
                 return -1
             else
-                bsize = bsize + arg.size
+                _bsize = _bsize + arg.size
             endif
             if !defined (arg.name)
                 echo "E: Missing argument name in message '$(msg.id:no)'"
@@ -117,7 +118,8 @@ function verify_format_and_setup ()
                 endif
             endif
         endfor    
-        msg.bsize = bsize
+        msg.bsize = _bsize
+        log.bsize = log.bsize + 7 + _bsize
     endfor
     for enum
         if count (log.enum, e.name = enum.name, e) > 1
