@@ -108,6 +108,7 @@ int main(int argc, char *argv[])
 .for msg
             \
 .   output_msg(msg)
+            usleep(3000);
             update_seed(&seed, i);
 .endfor
         }
@@ -125,6 +126,7 @@ int main(int argc, char *argv[])
             \
 .   output_msg(msg)
             update_seed(&seed, i);
+            usleep(3000);
         }
         write_block(fp, $(2*log.length)/BLOCK_SIZE);
 
