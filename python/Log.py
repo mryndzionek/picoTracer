@@ -67,7 +67,6 @@ class Log(object):
             logging.warn("CRC error: " + hex(crc) + " expected : " + hex(expected_crc))
             return False
 
-
     def _parse(self, frame):
 
         if len (frame) >= 6:
@@ -118,7 +117,7 @@ class Log(object):
         return log
             
     def decode_file(self, in_file, out_file, block = 10):
-        i = 0
+        i = -1
         
         # read data from file one block at a time
         data = bytearray(in_file.read(block))
@@ -128,6 +127,6 @@ class Log(object):
             data = in_file.read(block)
             for msg in l:
                     out_file.write('{0}, {1:#0{2}x}, {3}, {4}, {5}\n'.format(msg[0], msg[1], 10, msg[2], msg[3], self._format_hex(msg[4])))
-                    if (msg[0] - i) > 1:
-                        logging.warn("Possible logs discontinuity detected")
+                    if (i > -1) and (msg[0] - i) > 1:
+                            logging.warn("Possible logs discontinuity detected. Missed " + str(msg[0] - i) + " messages")
                     i = msg[0]
