@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(pico_spy)
 
+enable_testing()
+
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
@@ -35,6 +37,7 @@ function(gsl_gen in_model)
     )
   add_custom_target(gsl_${in_model} DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen/src/log_${in_model}.c)
   add_executable(log_${in_model}_test ${CMAKE_CURRENT_SOURCE_DIR}/gen/tests/log_${in_model}_test.c ${COMMON_SRCS})
+  add_test(log_${in_model}_test log_${in_model}_test)
 endfunction(gsl_gen)
 
 gsl_gen(fsm)
