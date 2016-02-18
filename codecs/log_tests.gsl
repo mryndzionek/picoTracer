@@ -100,6 +100,8 @@ int main(int argc, char *argv[])
     fp = fopen("log_$(log.prefix)_test.out", "wb");
     if(fp)
     {
+        // Test case 1: 
+        //  fill the buffer without overwrite iterating over every message
         for(i=0; i<ITER_SIZE; i++)
         {
             update_seed(&seed, i);
@@ -109,7 +111,25 @@ int main(int argc, char *argv[])
             update_seed(&seed, i);
 .endfor
         }
-        write_block(fp, ITER_SIZE*$(log.bsize)/10);
+        write_block(fp, $(2*log.length)/BLOCK_SIZE);
+
+        // Test case 2: 
+        //  fill the buffer with single message overwriting it
+
+.for msg
+        // $(msg.id:)
+.   iters = math.ceil(log.length/(msg.bsize+8))
+        for(i=0; i<$(iters); i++)
+        {
+            update_seed(&seed, i);
+            \
+.   output_msg(msg)
+            update_seed(&seed, i);
+        }
+        write_block(fp, $(2*log.length)/BLOCK_SIZE);
+
+.endfor
+
         fclose(fp);
     }
     else

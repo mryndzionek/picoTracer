@@ -119,7 +119,7 @@ function verify_format_and_setup ()
             endif
         endfor    
         msg.bsize = _bsize
-        log.bsize = log.bsize + 7 + _bsize
+        log.bsize = log.bsize + 8 + _bsize
     endfor
     for enum
         if count (log.enum, e.name = enum.name, e) > 1
