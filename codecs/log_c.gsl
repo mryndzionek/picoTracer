@@ -48,11 +48,11 @@ size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
 #define ESCAPE_BYTE        (0x7D)
 
 #define ENCODE_NUM_1(_b, _v) \\
-    if ((_v == END_FLAG) || (_v == ESCAPE_BYTE)) { \\
+    if (_v ^ END_FLAG) { \\
+        *(_b++) = _v; \\
+     } else { \\
         *(_b++) = ESCAPE_BYTE; \\
         *(_b++) = _v ^ 0x20; \\
-     } else { \\
-        *(_b++) = _v; \\
     }
 
 #define ENCODE_NUM_2(_b, _v) \\
