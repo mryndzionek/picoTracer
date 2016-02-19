@@ -90,8 +90,10 @@ static void update_seed(uint64_t *seed, uint8_t n)
 
 int main(int argc, char *argv[])
 {
+    (void)argc;
+    (void)argv;
     LOG_INFO("Starting test: log_$(log.prefix)_test.csv version %s", VERSION_STRING);
-    LOG_INFO("This test will output 'log_$(log.prefix)_test.out' on successful run");
+    LOG_INFO("This test will output '%s' on successful run", "log_$(log.prefix)_test.out");
 
     FILE *fp;
     uint8_t i;

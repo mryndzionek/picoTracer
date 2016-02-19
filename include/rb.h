@@ -7,7 +7,7 @@
 typedef struct {
     size_t beg_index_, end_index_, size_;
     size_t const capacity_;
-    uint8_t data_[0];
+    uint8_t *data_;
 } rb_t;
 
 size_t rb_size(rb_t *rb);

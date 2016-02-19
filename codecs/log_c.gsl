@@ -69,10 +69,7 @@ size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
     _v >>= 16 \\
     ENCODE_NUM_4(_b, (_v));
 
-static struct {
-    rb_t self;
-    uint8_t data_[$(log.length)];
-} _rb = {{ .capacity_ = $(log.length)}};
+static rb_t _rb = { .data_ = (uint8_t[$(log.length)]){0}, .capacity_ = $(log.length)};
 
 static uint8_t log_$(log.prefix)_counter;
 
@@ -111,7 +108,7 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
     crc = _log_$(log.prefix)_crc(tmp, b-tmp);
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
-    (void)rb_write(&_rb.self, tmp, b-tmp);
+    (void)rb_write(&_rb, tmp, b-tmp);
 }
 .endif
 
@@ -137,7 +134,7 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
     crc = _log_$(log.prefix)_crc(tmp, b-tmp);
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
-    (void)rb_write(&_rb.self, tmp, b-tmp);
+    (void)rb_write(&_rb, tmp, b-tmp);
 .       endif
 .   endif
 }
@@ -146,6 +143,6 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
 size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes)
 {
     size_t read;
-    read = rb_read(&_rb.self, data, bytes);
+    read = rb_read(&_rb, data, bytes);
     return read;
 }
