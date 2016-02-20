@@ -20,7 +20,7 @@ endtemplate
 .           elsif arg.size = 4
  I \
 .           elsif arg.size = 8
- L \
+ Q \
 .           endif
 .       endif
 .   endfor

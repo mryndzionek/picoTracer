@@ -23,7 +23,7 @@ class MsgDecoder(object):
 class Log(object):
 
     def __init__(self):
-        logging.basicConfig(level=logging.DEBUG,
+        logging.basicConfig(level=logging.INFO,
             format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
             datefmt='%m-%d %H:%M:%S',
             filemode='w')
@@ -35,22 +35,27 @@ class Log(object):
         return ' '.join(m[i:i+2] for i in range(0, len(m), 2))
    
     def _split(self, data):
-    
         groups = data.split('\x7E')    
-        escaped = []
-        for group in groups:
-            s = re.split('[\x7d](.)', group)
-            if len(s) > 1:
-                for i,j,k in zip(s[0::3], s[1::3], s[2::3]):
-                    g = bytearray(i)
-                    g.append(ord(j[0])^0x20)
-                    g.extend(k)
-                    escaped = escaped + [g]
-                    logging.debug ("Escaping seq. form group: " + self._format_hex(group) + " -> " + self._format_hex(g))
-            else:
-                escaped = escaped + [group]
+        return groups
 
-        return escaped
+    def _escape_reducer(self, x, y):
+        a = x[0]
+        s = x[1]
+
+        if s:        
+            a.append(y ^ 0x20)
+            s = False
+        else:
+            if y == 0x7D:
+                s = True
+            else:
+                a.append(y)
+
+        return (a, s)
+            
+    def _escape(self, data):
+        v = reduce(lambda x,y: self._escape_reducer(x,y), data, (bytearray(), False))
+        return v[0]
 
     def _default_crc(self, data):
         crc = reduce(lambda x, y: x+y, data)        
@@ -67,8 +72,9 @@ class Log(object):
             logging.warn("CRC error: " + hex(crc) + " expected : " + hex(expected_crc))
             return False
 
-    def _parse(self, frame):
-
+    def _parse(self, data):
+    
+        frame = self._escape(data)    
         if len (frame) >= 6:
             cnt = frame[0]
             uid = frame[1]
@@ -80,17 +86,10 @@ class Log(object):
                     crc = frame[6+decoder.size]
                     if self._crc_check(frame[1:-1], crc):
                         l = (cnt,) + (timestamp,) + decoder.decode(frame[6:]) + (frame,)
-                        return True, l, frame[7+decoder.size:]
-                    else:
-                        return False, None, bytearray(())
-                else:
-                    return False, None, frame
-            else:
-                return False, None, bytearray(())
+                        logging.info ("Recovered valid frame: " + self._format_hex(frame))
+                        return l
 
-        else:
-            return False, None, frame
-        
+            return None
 
     def reset(self):
         self.tmp_buf = bytearray()
@@ -100,19 +99,21 @@ class Log(object):
 
         logging.debug ("Decoding data: " + self._format_hex(data))    
 
-        frames = self._split(data)
-        #logging.debug("After splitting: " + str(frames))
+        frames = self._split(bytearray(data))
 
+        #cumulate the last remainder
         self.tmp_buf.extend(frames[0])
         frames[0] = self.tmp_buf
 
         for frame in frames:
             if frame:
                 logging.debug ("Processing frame: " + self._format_hex(frame))
-
-            s, l, self.tmp_buf = self._parse(bytearray(frame))
-            if s:
-                log.append(l)
+                l = self._parse(frame)
+                if l:
+                    log.append(l)
+                    self.reset()
+                else:
+                    self.tmp_buf = frame
 
         return log
             

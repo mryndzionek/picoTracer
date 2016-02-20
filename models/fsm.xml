@@ -21,9 +21,10 @@
         <arg name = "state" type = "enum" />
     </msg>
 
-    <msg id = "error" level="ERROR" format = "The values are out of range 0x{:02X} < 0x{:02X}">
+    <msg id = "error" level="ERROR" format = "The values are out of range 0x{:02X} < 0x{:02X} - 0x{:02X}">
         <arg name = "threshold" type = "number" size ="2"/>
         <arg name = "alarm" type = "number" size ="4"/>
+        <arg name = "probe" type = "number" size ="8"/>
     </msg>
 
     <msg id = "machine_init" level="INFO" format = "Module started"/>
