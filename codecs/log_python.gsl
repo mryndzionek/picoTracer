@@ -31,7 +31,7 @@ endtemplate
 .   if count (my.msg.arg, arg.type = "enum", arg) > 0
 , { \
 .       for my.msg.arg as arg where arg.type = "enum"
-$(item (arg) - 1): _log_$(arg.name)_enum\
+$(item (arg) - 1): $(arg.name)_enum\
 .           if !last ()
 , \
 .           endif
@@ -41,45 +41,30 @@ $(item (arg) - 1): _log_$(arg.name)_enum\
 .endmacro
 .
 .copy_args_to_aliases()
-.output log.path+"../gen/python/Log$(log.prefix:Neat).py"
-
+.output log.path+"../gen/python/Trace$(log.prefix:Neat)Cfg.py"
 import sys
 import struct
 import binascii
-import Log
+import TraceDecoder
 
-class Log$(log.prefix:Neat)(Log.Log):
+class Trace$(log.prefix:Neat)Cfg(object):
 
 .for enum
-    _log_$(enum.name)_enum = {
+    $(enum.name)_enum = {
 .   for entry
         $(entry.key:): '$(entry.value:)',
 .   endfor
     };
 
 .endfor
-    _log_map = {
+    cfg = {
 .for msg
         # Message: $(msg.id:)
-        $(msg.uid): Log.MsgDecoder('$(msg.LEVEL)', '$(msg.format:)', \
+        $(msg.uid): TraceDecoder.MsgDecoder('$(msg.LEVEL)', '$(msg.format:)', \
 .   gen_struct_format (msg)
 .   gen_enum_dict (msg)
 ),
 
 .endfor
     };
-
-if len(sys.argv) == 2:
-    in_f = open(sys.argv[1], 'rb')
-    out_f = open(sys.argv[1] + ".csv", 'wb')
-
-    logger = Log$(log.prefix:Neat)()
-    try:
-        logger.decode_file(in_f, out_f)
-    except:
-        in_f.close()
-        out_f.close()
-        raise
-else:
-    print "Please provide a filename as first argument"
 

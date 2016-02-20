@@ -20,14 +20,12 @@ class MsgDecoder(object):
             
         return (self.l, self.f.format(*values))
 
-class Log(object):
+class TraceDecoder(object):
 
-    def __init__(self):
-        logging.basicConfig(level=logging.DEBUG,
-            format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
-            datefmt='%m-%d %H:%M:%S',
-            filemode='w')
-
+    def __init__(self, reader, writer, cfg):
+        self.reader = reader
+        self.writer = writer
+        self.cfg = cfg            
         self.reset()
 
     def _format_hex(self, msg):
@@ -80,8 +78,8 @@ class Log(object):
             uid = frame[1]
             timestamp = struct.unpack_from('I', frame, 2)[0]
 
-            if uid in self._log_map:
-                decoder = self._log_map.get(uid)
+            if uid in self.cfg:
+                decoder = self.cfg.get(uid)
                 if len (frame[6:]) >= decoder.size+1:
                     crc = frame[6+decoder.size]
                     if self._crc_check(frame[1:-1], crc):
@@ -94,7 +92,7 @@ class Log(object):
     def reset(self):
         self.tmp_buf = bytearray()
 
-    def decode(self, data):
+    def _decode_data(self, data):
         log = []
 
         logging.debug ("Decoding data: " + self._format_hex(data))    
@@ -117,17 +115,18 @@ class Log(object):
 
         return log
             
-    def decode_file(self, in_file, out_file, block = 10):
+    def decode(self, block = 10):
         i = -1
         
         # read data from file one block at a time
-        data = bytearray(in_file.read(block))
+        data = bytearray(self.reader.read(block))
         while data:
             
-            l = self.decode(data)
-            data = in_file.read(block)
+            l = self._decode_data(data)
+            data = self.reader.read(block)
             for msg in l:
-                    out_file.write('{0}, {1}, {2}, {3}, {4}\n'.format(msg[0], msg[1], msg[2], msg[3], self._format_hex(msg[4])))
+                    self.writer.write('{0}, {1}, {2}, {3}, {4}\n'.format(msg[0], msg[1], msg[2], msg[3], self._format_hex(msg[4])))
+                    self.writer.flush()
                     if (i > -1) and (msg[0] - i) > 1:
                             logging.warn("Possible logs discontinuity detected. Missed " + str(msg[0] - i - 1) + " message(s)")
                     i = msg[0]
