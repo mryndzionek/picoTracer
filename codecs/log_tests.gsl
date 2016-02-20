@@ -53,7 +53,7 @@ _e_$(arg.name)[seed % $(arg.length)]\
 #define ITER_SIZE                       ($(math.floor(iters)))
 
 #define NUMBER_SEED     (0xAAAAAAAAAAAAAAAA)
-#define PATTERN_SEED    (0xDEADBEEFDEAD7DEF)
+#define PATTERN_SEED    (0xDE7DBEEFDE7E7DEF)
 
 .for enum where defined (enum.used)
 // Test array for enum '$(enum.name)'
