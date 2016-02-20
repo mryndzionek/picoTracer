@@ -15,12 +15,12 @@ args = parser.parse_args()
 
 if args.debug:
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
+                        format='%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M:%S',
                         filemode='w')
 else:
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
+                        format='%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M:%S',
                         filemode='w')
 
