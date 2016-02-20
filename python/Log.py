@@ -23,7 +23,7 @@ class MsgDecoder(object):
 class Log(object):
 
     def __init__(self):
-        logging.basicConfig(level=logging.INFO,
+        logging.basicConfig(level=logging.DEBUG,
             format='%(asctime)s.%(msecs)d %(levelname)-8s %(message)s',
             datefmt='%m-%d %H:%M:%S',
             filemode='w')

@@ -47,7 +47,7 @@ function verify_format_and_setup ()
     for msg
         msg.uid = item () - 1
         _bsize = 0
-        if count (msg.arg) = 0
+        if (count (msg.arg) = 0) & !defined (msg.alias)
             log.has_no_args = log.has_no_args + 1 ? 1
         endif
         if !defined (msg.id)
@@ -122,6 +122,28 @@ function verify_format_and_setup ()
         msg.bsize = _bsize
         log.bsize = log.bsize + 8 + _bsize
     endfor
+    for msg where defined (a.alias) as a
+        if a.id = a.alias
+            echo "E: Message aliases itself '$(a.id:no)'"
+            return -1
+        endif
+        c = count (log.msg, msg.id = a.alias)
+        if c = 0
+            echo "E: Missing alias reference '$(a.id:no) -> $(a.alias:no)'"
+            return -1
+        else
+            for log.msg as m where m.id = a.alias
+                a.bsize = m.bsize
+                log.bsize = log.bsize + a.bsize
+                if defined (m.alias)
+                    echo "E: Message cannot alias aliased message '$(a.id:no) -> $(a.alias:no)'"
+                    return -1
+                else
+                    m.is_aliased = 1
+                endif
+            endfor
+        endif    
+    endfor
     for enum
         if count (log.enum, e.name = enum.name, e) > 1
             echo "E: Duplicate enum name '$(enum.name:no)'"
@@ -129,6 +151,16 @@ function verify_format_and_setup ()
         endif
     endfor
     return 0
+endfunction
+
+function copy_args_to_aliases
+    for log.msg where defined (msg.alias)
+        for log.msg as m where m.id = msg.alias
+            for m.arg
+                copy arg to msg
+            endfor
+        endfor
+    endfor
 endfunction
 
 endtemplate

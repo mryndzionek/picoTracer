@@ -9,8 +9,18 @@ endif
 
 endtemplate
 .
-.macro gen_c_fn_declr (msg)
-void log_$(log.prefix)_$(my.msg.id)(\
+.macro gen_c_fn_args (msg)
+.   for my.msg.arg
+.       if arg.type = "number" | arg.type = "enum"
+$(arg.name:no)\
+.           if !last (arg)
+, \
+.           endif
+.       endif
+.   endfor
+.endmacro
+.
+.macro gen_c_fn_params (msg)
 .   for my.msg.arg
 .       if arg.type = "number" | arg.type = "enum"
 uint$(arg.size*8)_t \
@@ -20,7 +30,58 @@ $(arg.name:no)\
 .           endif
 .       endif
 .   endfor
+.endmacro
+.
+.macro gen_c_fn_declr (msg)
+.   if defined (my.msg.alias)
+void log_$(log.prefix)_$(my.msg.id)(\
+.       for log.msg as ma where ma.id = my.msg.alias
+.           gen_c_fn_params (ma)
+.       endfor
+.   elsif defined (my.msg.is_aliased)
+void log_$(log.prefix)_$(my.msg.id)(\
+.       gen_c_fn_params (my.msg)
+.   else
+void log_$(log.prefix)_$(my.msg.id)(\
+.       gen_c_fn_params (my.msg)
+.endif
 )\
+.endmacro
+.
+.macro gen_c_fn_alias_declr (msg)
+static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
+.   if defined (my.msg.alias)
+.       for log.msg as ma where ma.id = my.msg.alias
+.           gen_c_fn_params (ma)
+.       endfor
+.   else
+.       gen_c_fn_params (my.msg)
+.endif
+)\
+.endmacro
+.
+.macro gen_c_fn_body (msg)
+.   if my.msg.level_v <= log.level_v
+    uint8_t tmp[$(2*(7+my.msg.bsize)+1)], *b = tmp;
+    uint32_t ts = GET_TIMESTAMP;
+    uint8_t crc;
+
+    ENCODE_NUM_1(b, log_$(log.prefix)_counter);
+    log_$(log.prefix)_counter++;
+.       if defined (my.msg.is_aliased)
+    ENCODE_NUM_1(b, uid);
+.       else
+    ENCODE_NUM_1(b, $(my.msg.uid));
+.       endif
+    ENCODE_NUM_4(b, ts);
+.       for arg
+    ENCODE_NUM_$(arg.size)(b, $(arg.name));
+.       endfor
+    crc = _log_$(log.prefix)_crc(tmp, b-tmp);
+    ENCODE_NUM_1(b, crc);
+    *(b++) = END_FLAG;
+    (void)rb_write(&_rb, tmp, b-tmp);
+.   endif
 .endmacro
 .
 .output log.path+"../gen/include/log_$(log.prefix).h"
@@ -113,37 +174,38 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
 }
 .endif
 
+.for msg where defined (msg.is_aliased)
+.   gen_c_fn_alias_declr (msg)
+
+{
+.   gen_c_fn_body (msg)
+}
+.endfor
+
 .for msg
 .   gen_c_fn_declr (msg)
 
 {
-.   if count (msg.arg) = 0
+.   if defined (msg.alias)   
+    _log_$(log.prefix)_$(msg.alias)_alias($(msg.uid), \
+.       for log.msg as ma where ma.id = msg.alias    
+.           gen_c_fn_args (ma)
+.       endfor
+);
+.   elsif defined (msg.is_aliased)   
+    _log_$(log.prefix)_$(msg.id)_alias($(msg.uid), \
+.       gen_c_fn_args (msg)
+);
+.   elsif (count (msg.arg) = 0)
     _log_$(log.prefix)_no_args($(msg.uid));
 .   else
-.       if msg.level_v <= log.level_v
-    uint8_t tmp[$(2*(7+msg.bsize)+1)], *b = tmp;
-    uint32_t ts = GET_TIMESTAMP;
-    uint8_t crc;
-
-    ENCODE_NUM_1(b, log_$(log.prefix)_counter);
-    log_$(log.prefix)_counter++;
-    ENCODE_NUM_1(b, $(msg.uid));
-    ENCODE_NUM_4(b, ts);
-.           for arg
-    ENCODE_NUM_$(arg.size)(b, $(arg.name));
-.           endfor
-    crc = _log_$(log.prefix)_crc(tmp, b-tmp);
-    ENCODE_NUM_1(b, crc);
-    *(b++) = END_FLAG;
-    (void)rb_write(&_rb, tmp, b-tmp);
-.       endif
+.       gen_c_fn_body (msg)
 .   endif
 }
 
 .endfor
 size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes)
 {
-    size_t read;
-    read = rb_read(&_rb, data, bytes);
+    size_t read = rb_read(&_rb, data, bytes);
     return read;
 }

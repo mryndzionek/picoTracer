@@ -40,6 +40,7 @@ $(item (arg) - 1): _log_$(arg.name)_enum\
 .   endif
 .endmacro
 .
+.copy_args_to_aliases()
 .output log.path+"../gen/python/Log$(log.prefix:Neat).py"
 
 import sys

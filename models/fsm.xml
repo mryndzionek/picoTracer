@@ -17,9 +17,7 @@
         <arg name = "state" type = "enum" />
     </msg>
 
-    <msg id = "state_exit" level="DEBUG" format = "exit : {}">
-        <arg name = "state" type = "enum" />
-    </msg>
+    <msg id = "state_exit" level="DEBUG" format = "exit : {}" alias="state_entry"/>
 
     <msg id = "error" level="ERROR" format = "The values are out of range 0x{:02X} < 0x{:02X} - 0x{:02X}">
         <arg name = "threshold" type = "number" size ="2"/>
