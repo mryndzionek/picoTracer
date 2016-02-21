@@ -71,9 +71,13 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .
 .macro gen_c_fn_body (msg)
 .   if trace.filtering = "dynamic" | (my.msg.level_v <= trace.level_v)
-    uint8_t tmp[$(2*(7+my.msg.bsize)+1)], *b = tmp;
+.       my.tmpsize = 2*(7+my.msg.bsize)+1
+.       if my.tmpsize > trace.block_size
+.           my.tmpsize = trace.block_size
+.       endif
+    uint8_t tmp[$(my.tmpsize)], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
-    uint8_t crc;
+    uint8_t crc = 0;
 
     ENCODE_NUM_1(b, trace_$(trace.prefix)_counter);
     trace_$(trace.prefix)_counter++;
@@ -83,10 +87,23 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid, \
     ENCODE_NUM_1(b, $(my.msg.uid));
 .       endif
     ENCODE_NUM_4(b, ts);
+.       my.size_left = my.tmpsize - 12
 .       for arg
+.           if (my.size_left - 2*arg.size) <=0
+    crc += _trace_$(trace.prefix)_crc(tmp, b-tmp);
+    (void)rb_write(&_rb, tmp, b-tmp);
+    b = tmp;
+.               my.size_left = my.tmpsize    
+.           endif
     ENCODE_NUM_$(arg.size)(b, $(arg.name));
+.           my.size_left = my.size_left - 2*arg.size
 .       endfor
-    crc = _trace_$(trace.prefix)_crc(tmp, b-tmp);
+    crc += _trace_$(trace.prefix)_crc(tmp, b-tmp);
+.       if (my.size_left < 3)
+    (void)rb_write(&_rb, tmp, b-tmp);
+    b = tmp;
+.       endif
+    crc = ~crc;
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
@@ -177,7 +194,7 @@ static uint8_t _trace_$(trace.prefix)_crc(uint8_t *data, uint8_t len)
             crc += data[i];   
     }
 
-    return ~crc;
+    return crc;
 .else
     return crc_$(trace.crc:)(&data[s], len);
 .endif    
@@ -189,11 +206,12 @@ static void _trace_$(trace.prefix)_no_args(uint8_t uid)
     uint8_t tmp[15], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
     uint8_t crc;
+
     ENCODE_NUM_1(b, trace_$(trace.prefix)_counter);
     trace_$(trace.prefix)_counter++;
     ENCODE_NUM_1(b, uid);
     ENCODE_NUM_4(b, ts);
-    crc = _trace_$(trace.prefix)_crc(tmp, b-tmp);
+    crc = ~_trace_$(trace.prefix)_crc(tmp, b-tmp);
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
@@ -246,6 +264,5 @@ void trace_$(trace.prefix)_set_level(trace_$(trace.prefix)_level_e level)
 .endif
 size_t trace_$(trace.prefix)_get(uint8_t *data, size_t bytes)
 {
-    size_t read = rb_read(&_rb, data, bytes);
-    return read;
+    return rb_read(&_rb, data, bytes);
 }

@@ -19,6 +19,10 @@ endfunction
 
 function verify_format_and_setup ()
     trace.filtering ?= "static"
+    trace.block_size ?= 64
+    if trace.block_size < 16
+        trace.block_size = 16
+    endif
     if !((trace.filtering = "static") | (trace.filtering = "dynamic"))
         echo "E: Wrong filtering value '$(trace.filtering)'. Must be 'static' or 'dynamic'"
         return -1

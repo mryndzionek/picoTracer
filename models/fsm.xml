@@ -1,4 +1,4 @@
-<trace level = "DEBUG" length="256" filtering="dynamic">
+<trace level = "DEBUG" length="256" filtering="dynamic" block_size="15">
     
     <enum name = "state" size = "2">
         <entry key = "0x0001" value = "M1_DISABLED"/>
