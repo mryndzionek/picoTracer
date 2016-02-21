@@ -88,8 +88,11 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .       endif
     ENCODE_NUM_4(b, ts);
 .       my.size_left = my.tmpsize - 12
+    // Here we have at most $(my.size_left) bytes left in the buffer
 .       for arg
-.           if (my.size_left - 2*arg.size) <=0
+.           if (my.size_left - 2*arg.size) < 0
+    // No size left in the buffer to write argument of size $(arg.size)
+    // Write to ring buffer
     crc += _trace_$(trace.prefix)_crc(tmp, b-tmp);
     (void)rb_write(&_rb, tmp, b-tmp);
     b = tmp;
@@ -103,8 +106,7 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid, \
     (void)rb_write(&_rb, tmp, b-tmp);
     b = tmp;
 .       endif
-    crc = ~crc;
-    ENCODE_NUM_1(b, crc);
+    ENCODE_NUM_1(b, ~crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
 .   else
