@@ -81,7 +81,7 @@ class TraceDecoder(object):
                 decoder = self.cfg.get(uid)
                 if len (frame[6:]) >= decoder.size+1:
                     crc = frame[6+decoder.size]
-                    if self._crc_check(frame[1:-1], crc):
+                    if self._crc_check(frame[:-1], crc):
                         l = (cnt,) + (timestamp,) + decoder.decode(frame[6:]) + (frame,)
                         logging.info ("Recovered valid frame: " + self._format_hex(frame))
                         return l

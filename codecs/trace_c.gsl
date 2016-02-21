@@ -165,10 +165,9 @@ static trace_$(trace.prefix)_level_e trace_$(trace.prefix)_curr_level = $(trace.
 static uint8_t _trace_$(trace.prefix)_crc(uint8_t *data, uint8_t len)
 {
     uint8_t crc = 0, i;
-    uint8_t s = (data[0] == ESCAPE_BYTE) ? 2 : 1;
 
 .if ! defined (trace.crc)
-    for(i = s; i < len; i++)
+    for(i = 0; i < len; i++)
     {
         if(data[i] == ESCAPE_BYTE)
         {
