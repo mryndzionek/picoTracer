@@ -3,7 +3,7 @@ import argparse
 import logging
 import serial
 import TraceDecoder
-import TraceFsmCfg
+import TraceCfg
 
 parser = argparse.ArgumentParser(description='pictrace - trace decoder application')
 parser.add_argument('-i', '--input', choices=['file', 'serial'], default='serial')
@@ -39,7 +39,7 @@ try:
     try:
         writer = open(args.path + '.csv', 'wb')
         try:
-            cfg = TraceFsmCfg.TraceFsmCfg.cfg
+            cfg = TraceCfg.TraceCfg.cfg
             decoder = TraceDecoder.TraceDecoder(reader, writer, cfg)
             decoder.decode(args.block)
         finally:

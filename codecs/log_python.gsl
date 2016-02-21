@@ -41,13 +41,13 @@ $(item (arg) - 1): $(arg.name)_enum\
 .endmacro
 .
 .copy_args_to_aliases()
-.output log.path+"../gen/python/Trace$(log.prefix:Neat)Cfg.py"
+.output log.path+"../gen/python/TraceCfg.py"
 import sys
 import struct
 import binascii
 import TraceDecoder
 
-class Trace$(log.prefix:Neat)Cfg(object):
+class TraceCfg(object):
 
 .for enum
     $(enum.name)_enum = {
