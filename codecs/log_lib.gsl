@@ -18,6 +18,11 @@ function log_level_to_value (level)
 endfunction
 
 function verify_format_and_setup ()
+    log.filtering ?= "static"
+    if !((log.filtering = "static") | (log.filtering = "dynamic"))
+        echo "E: Wrong filtering value '$(log.filtering)'. Must be 'static' or 'dynamic'"
+        return -1
+    endif
     if !(count (root.) = 1)
         echo "E: The main log XML element is a sigleton"
         return -1

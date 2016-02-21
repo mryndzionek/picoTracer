@@ -52,8 +52,6 @@ _e_$(arg.name)[seed % $(arg.length)]\
 
 #define BLOCK_SIZE                      (10)
 .iters = log.length / log.bsize
-.echo log.bsize
-.echo log.length
 #define ITER_SIZE                       ($(math.floor(iters)))
 
 #define NUMBER_SEED     (0xAAAAAAAAAAAAAAAA)

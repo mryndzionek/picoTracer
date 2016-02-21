@@ -20,6 +20,15 @@ $(arg.name:no)\
 .   endfor
 .endmacro
 .
+.macro gen_unused_args (msg)
+.   if defined (my.msg.is_aliased)
+    (void)uid;
+.   endif
+.   for my.msg.arg
+    (void)$(arg.name);
+.   endfor
+.endmacro
+.
 .macro gen_c_fn_params (msg)
 .   for my.msg.arg
 .       if arg.type = "number" | arg.type = "enum"
@@ -61,7 +70,7 @@ static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .endmacro
 .
 .macro gen_c_fn_body (msg)
-.   if my.msg.level_v <= log.level_v
+.   if log.filtering = "dynamic" | (my.msg.level_v <= log.level_v)
     uint8_t tmp[$(2*(7+my.msg.bsize)+1)], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
     uint8_t crc;
@@ -81,6 +90,8 @@ static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
+.   else
+.       gen_unused_args (my.msg)
 .   endif
 .endmacro
 .
