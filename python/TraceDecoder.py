@@ -36,9 +36,8 @@ class TraceDecoder(object):
         groups = data.split('\x7E')    
         return groups
 
-    def _escape_reducer(self, x, y):
-        a = x[0]
-        s = x[1]
+    def _unescape_reducer(self, x, y):
+        a, s = x
 
         if s:        
             a.append(y ^ 0x20)
@@ -51,8 +50,8 @@ class TraceDecoder(object):
 
         return (a, s)
             
-    def _escape(self, data):
-        v = reduce(lambda x,y: self._escape_reducer(x,y), data, (bytearray(), False))
+    def _unescape(self, data):
+        v = reduce(lambda x,y: self._unescape_reducer(x,y), data, (bytearray(), False))
         return v[0]
 
     def _default_crc(self, data):
@@ -72,7 +71,7 @@ class TraceDecoder(object):
 
     def _parse(self, data):
     
-        frame = self._escape(data)    
+        frame = self._unescape(data)    
         if len (frame) >= 6:
             cnt = frame[0]
             uid = frame[1]

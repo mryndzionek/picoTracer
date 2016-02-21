@@ -43,14 +43,10 @@ try:
             cfg = TraceFsmCfg.TraceFsmCfg.cfg
             decoder = TraceDecoder.TraceDecoder(reader, writer, cfg)
             decoder.decode(args.block)
-        except:
-            raise
         finally:
             writer.close()
-    except:
-        raise
     finally:
         reader.close()
 
-except:
+except (ValueError, IOError, serial.SerialException):
     logging.error(sys.exc_info()[1])
