@@ -13,6 +13,17 @@ Structure of the project
 
 Protocol specification
 ----------------------
+```
+pico-frame      = counter uid timestamp payload crc FLAG
+counter         = 1*2HDLC
+uid             = 1*2HDLC
+timestamp       = 4*8HDLC
+payload         = *256HDL
+crc             = 1*2HDLC
+
+HDLC            = %x00-7D / %x7F-FF
+FLAG            = %x7E
+```
 
 XML model format
 ----------------
@@ -33,9 +44,10 @@ TODO
   - [ ] Add more info to this README
   - [ ] Add more examples
   - [x] Add generated tests to CTest under CMake
-  - [ ] Runtime trace level handling
+  - [x] Runtime trace level handling
   - [x] Implement integrity checking
   - [ ] Add different serialization strategies
+  - [ ] Limit temporary buffers size
 
 License
 -------
