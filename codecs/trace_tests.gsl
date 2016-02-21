@@ -1,6 +1,6 @@
 .template 0
 
-include "log_lib.gsl"
+include "trace_lib.gsl"
 
 s = verify_format_and_setup ()
 if s = -1
@@ -18,7 +18,7 @@ FF\
 .endmacro
 .
 .macro output_msg(msg)
-log_$(log.prefix)_$(my.msg.id)(\
+trace_$(trace.prefix)_$(my.msg.id)(\
 .   for my.msg.arg as arg
 .       if arg.type = "number"
 seed & \
@@ -37,21 +37,21 @@ _e_$(arg.name)[seed % $(arg.length)]\
 .endmacro
 .
 .copy_args_to_aliases()
-.output log.path+"../gen/tests/log_$(log.prefix)_test.c"
+.output trace.path+"../gen/tests/trace_$(trace.prefix)_test.c"
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "log_$(log.prefix).h"
+#include "trace_$(trace.prefix).h"
 #include "config.h"
 
 #define LOG_INFO(M, ...) fprintf(stderr, "[INFO] (%d) " M \
 "\\n", __LINE__, ##__VA_ARGS__)
 
 #define BLOCK_SIZE                      (10)
-.iters = log.length / log.bsize
+.iters = trace.length / trace.bsize
 #define ITER_SIZE                       ($(math.floor(iters)))
 
 #define NUMBER_SEED     (0xAAAAAAAAAAAAAAAA)
@@ -73,7 +73,7 @@ static void write_block(FILE *fp, size_t n)
 
     while ((block == BLOCK_SIZE) && (n > 0))
     {    
-        block = log_$(log.prefix)_get(tmp, BLOCK_SIZE);
+        block = trace_$(trace.prefix)_get(tmp, BLOCK_SIZE);
         fwrite(tmp, 1, block, fp);
         n--;
     }
@@ -95,15 +95,15 @@ int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    LOG_INFO("Starting test: log_$(log.prefix)_test.csv version %s", VERSION_STRING);
-    LOG_INFO("This test will output '%s' on successful run", "log_$(log.prefix)_test.out");
+    LOG_INFO("Starting test: trace_$(trace.prefix)_test.csv version %s", VERSION_STRING);
+    LOG_INFO("This test will output '%s' on successful run", "trace_$(trace.prefix)_test.out");
 
     FILE *fp;
     uint8_t i;
     uint64_t seed = NUMBER_SEED;
 
     srand(0xaa);
-    fp = fopen("log_$(log.prefix)_test.out", "wb");
+    fp = fopen("trace_$(trace.prefix)_test.out", "wb");
     if(fp)
     {
         // Test case 1: 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
             update_seed(&seed, i);
 .endfor
         }
-        write_block(fp, $(2*log.length)/BLOCK_SIZE);
+        write_block(fp, $(2*trace.length)/BLOCK_SIZE);
 
         // Test case 2: 
         //  fill the buffer with single message overwriting it
@@ -125,13 +125,13 @@ int main(int argc, char *argv[])
         seed = PATTERN_SEED;
 .for msg
         // $(msg.id:)
-.   iters = math.ceil(log.length/(msg.bsize+8))
+.   iters = math.ceil(trace.length/(msg.bsize+8))
         for(i=0; i<$(iters); i++)
         {
             \
 .   output_msg(msg)
         }
-        write_block(fp, $(2*log.length)/BLOCK_SIZE);
+        write_block(fp, $(2*trace.length)/BLOCK_SIZE);
 
 .endfor
 

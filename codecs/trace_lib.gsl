@@ -1,7 +1,7 @@
 .template 0
 # Library functions
 
-function log_level_to_value (level)
+function trace_level_to_value (level)
     if my.level = "ERROR"
         return 1
     elsif my.level = "WARN"
@@ -18,68 +18,68 @@ function log_level_to_value (level)
 endfunction
 
 function verify_format_and_setup ()
-    log.filtering ?= "static"
-    if !((log.filtering = "static") | (log.filtering = "dynamic"))
-        echo "E: Wrong filtering value '$(log.filtering)'. Must be 'static' or 'dynamic'"
+    trace.filtering ?= "static"
+    if !((trace.filtering = "static") | (trace.filtering = "dynamic"))
+        echo "E: Wrong filtering value '$(trace.filtering)'. Must be 'static' or 'dynamic'"
         return -1
     endif
     if !(count (root.) = 1)
-        echo "E: The main log XML element is a sigleton"
+        echo "E: The main trace XML element is a sigleton"
         return -1
     endif
-    if !defined (log.length)
+    if !defined (trace.length)
         echo "E: Logger length not defined"
         return -1
     endif
-    if !defined (log.level)
-        log.level = "INFO"
-        echo "I: Setting log level to $(LOG.LEVEL)"
+    if !defined (trace.level)
+        trace.level = "INFO"
+        echo "I: Setting trace level to $(TRACE.LEVEL)"
     endif
-    log.level_v = log_level_to_value (log.level)
+    trace.level_v = trace_level_to_value (trace.level)
     f = file.open (filename)
-    log.prefix = file.basename (f.name)
-    log.path = f.path
+    trace.prefix = file.basename (f.name)
+    trace.path = f.path
     file.close (f)
-    if log.level_v = -1
-        echo "E: Wrong log level $(LOG.LEVEL)"
+    if trace.level_v = -1
+        echo "E: Wrong trace level $(TRACE.LEVEL)"
         return -1
     endif
-    if count (log.msg) > 255    #0xFF reserved for diadnostic events
+    if count (trace.msg) > 255    #0xFF reserved for diadnostic events
         echo "E: Too many messages defined"
         return -1
     endif
-    log.bsize = 0
+    trace.bsize = 0
     for msg
         msg.uid = item () - 1
         _bsize = 0
         if (count (msg.arg) = 0) & !defined (msg.alias)
-            log.has_no_args = log.has_no_args + 1 ? 1
+            trace.has_no_args = trace.has_no_args + 1 ? 1
         endif
         if !defined (msg.id)
             echo "E: The id for message '$(msg.id:no)' not set"
             return -1
         endif
-        if count (log.msg, m.id = msg.id, m) > 1
+        if count (trace.msg, m.id = msg.id, m) > 1
             echo "E: Duplicate message with id '$(msg.id:no)'"
             return -1
         endif
         if !defined (msg.level)
-            echo "E: The log level for message '$(msg.id:no)' not set"
+            echo "E: The trace level for message '$(msg.id:no)' not set"
             return -1
         else
-            msg.level_v = log_level_to_value (msg.level)
+            msg.level_v = trace_level_to_value (msg.level)
             if msg.level_v = -1
-                echo "E: Wrong log level $(msg.LEVEL) at '$(msg.id:no)'"
+                echo "E: Wrong trace level $(msg.LEVEL) at '$(msg.id:no)'"
                 return -1
             endif
         endif
         if !defined (msg.format)
-            echo "E: The log format for message '$(msg.id:no)' not set"
+            echo "E: The trace format for message '$(msg.id:no)' not set"
             return -1
         endif
         for arg
             if arg.type = "enum"
-                c = count (log.enum, enum.name = arg.name)
+                c = count (trace.enum, enum.name = arg.name)
                 if c = 0
                     echo "E: Missing enum define referenced in message '$(msg.id:no)'"
                     return -1
@@ -87,7 +87,7 @@ function verify_format_and_setup ()
                     echo "E: Multiple enums with the same name defined ('$(arg.name)')"
                     return -1
                 endif
-                for log.enum where enum.name = arg.name
+                for trace.enum where enum.name = arg.name
                     arg.size = enum.size
                     arg.length = count (enum.)
                     enum.used = 1
@@ -117,7 +117,7 @@ function verify_format_and_setup ()
                 return -1
             endif
             if arg.type = "enum"
-                c = count (log.enum, enum.name = arg.name)
+                c = count (trace.enum, enum.name = arg.name)
                 if c = 0
                     echo "E: Missing enum define referenced in message '$(msg.id:no)'"
                     return -1
@@ -125,21 +125,21 @@ function verify_format_and_setup ()
             endif
         endfor    
         msg.bsize = _bsize
-        log.bsize = log.bsize + 8 + _bsize
+        trace.bsize = trace.bsize + 8 + _bsize
     endfor
     for msg where defined (a.alias) as a
         if a.id = a.alias
             echo "E: Message aliases itself '$(a.id:no)'"
             return -1
         endif
-        c = count (log.msg, msg.id = a.alias)
+        c = count (trace.msg, msg.id = a.alias)
         if c = 0
             echo "E: Missing alias reference '$(a.id:no) -> $(a.alias:no)'"
             return -1
         else
-            for log.msg as m where m.id = a.alias
+            for trace.msg as m where m.id = a.alias
                 a.bsize = m.bsize
-                log.bsize = log.bsize + a.bsize
+                trace.bsize = trace.bsize + a.bsize
                 if defined (m.alias)
                     echo "E: Message cannot alias aliased message '$(a.id:no) -> $(a.alias:no)'"
                     return -1
@@ -150,7 +150,7 @@ function verify_format_and_setup ()
         endif    
     endfor
     for enum
-        if count (log.enum, e.name = enum.name, e) > 1
+        if count (trace.enum, e.name = enum.name, e) > 1
             echo "E: Duplicate enum name '$(enum.name:no)'"
             return -1
         endif
@@ -159,8 +159,8 @@ function verify_format_and_setup ()
 endfunction
 
 function copy_args_to_aliases
-    for log.msg where defined (msg.alias)
-        for log.msg as m where m.id = msg.alias
+    for trace.msg where defined (msg.alias)
+        for trace.msg as m where m.id = msg.alias
             for m.arg
                 copy arg to msg
             endfor

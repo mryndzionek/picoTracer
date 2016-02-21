@@ -1,6 +1,6 @@
 .template 0
 
-include "log_lib.gsl"
+include "trace_lib.gsl"
 
 s = verify_format_and_setup ()
 if s = -1
@@ -43,24 +43,24 @@ $(arg.name:no)\
 .
 .macro gen_c_fn_declr (msg)
 .   if defined (my.msg.alias)
-void log_$(log.prefix)_$(my.msg.id)(\
-.       for log.msg as ma where ma.id = my.msg.alias
+void trace_$(trace.prefix)_$(my.msg.id)(\
+.       for trace.msg as ma where ma.id = my.msg.alias
 .           gen_c_fn_params (ma)
 .       endfor
 .   elsif defined (my.msg.is_aliased)
-void log_$(log.prefix)_$(my.msg.id)(\
+void trace_$(trace.prefix)_$(my.msg.id)(\
 .       gen_c_fn_params (my.msg)
 .   else
-void log_$(log.prefix)_$(my.msg.id)(\
+void trace_$(trace.prefix)_$(my.msg.id)(\
 .       gen_c_fn_params (my.msg)
 .endif
 )\
 .endmacro
 .
 .macro gen_c_fn_alias_declr (msg)
-static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
+static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .   if defined (my.msg.alias)
-.       for log.msg as ma where ma.id = my.msg.alias
+.       for trace.msg as ma where ma.id = my.msg.alias
 .           gen_c_fn_params (ma)
 .       endfor
 .   else
@@ -70,13 +70,13 @@ static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .endmacro
 .
 .macro gen_c_fn_body (msg)
-.   if log.filtering = "dynamic" | (my.msg.level_v <= log.level_v)
+.   if trace.filtering = "dynamic" | (my.msg.level_v <= trace.level_v)
     uint8_t tmp[$(2*(7+my.msg.bsize)+1)], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
     uint8_t crc;
 
-    ENCODE_NUM_1(b, log_$(log.prefix)_counter);
-    log_$(log.prefix)_counter++;
+    ENCODE_NUM_1(b, trace_$(trace.prefix)_counter);
+    trace_$(trace.prefix)_counter++;
 .       if defined (my.msg.is_aliased)
     ENCODE_NUM_1(b, uid);
 .       else
@@ -86,7 +86,7 @@ static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .       for arg
     ENCODE_NUM_$(arg.size)(b, $(arg.name));
 .       endfor
-    crc = _log_$(log.prefix)_crc(tmp, b-tmp);
+    crc = _trace_$(trace.prefix)_crc(tmp, b-tmp);
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
@@ -95,36 +95,36 @@ static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .   endif
 .endmacro
 .
-.output log.path+"../gen/include/log_$(log.prefix).h"
-#ifndef LOG_$(LOG.PREFIX)_H_INCLUDED
-#define LOG_$(LOG.PREFIX)_H_INCLUDED
+.output trace.path+"../gen/include/trace_$(trace.prefix).h"
+#ifndef TRACE_$(TRACE.PREFIX)_H_INCLUDED
+#define TRACE_$(TRACE.PREFIX)_H_INCLUDED
 
 #include <stdint.h>
 #include <stddef.h>
 
-.if log.filtering = "dynamic"
+.if trace.filtering = "dynamic"
 typedef enum {
-    $(log.PREFIX)_TRACE = 0,
-    $(log.PREFIX)_DEBUG,
-    $(log.PREFIX)_INFO,
-    $(log.PREFIX)_WARN,
-    $(log.PREFIX)_ERROR,
-} log_$(log.prefix)_level_e;
+    $(trace.PREFIX)_TRACE = 0,
+    $(trace.PREFIX)_DEBUG,
+    $(trace.PREFIX)_INFO,
+    $(trace.PREFIX)_WARN,
+    $(trace.PREFIX)_ERROR,
+} trace_$(trace.prefix)_level_e;
 .endif
 
 .for msg
 .   gen_c_fn_declr (msg)
 ;
 .endfor
-.if log.filtering = "dynamic"
-void log_$(log.prefix)_set_level(log_$(log.prefix)_level_e level);
+.if trace.filtering = "dynamic"
+void trace_$(trace.prefix)_set_level(trace_$(trace.prefix)_level_e level);
 .endif
-size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
+size_t trace_$(trace.prefix)_get(uint8_t *data, size_t bytes);
 
-#endif // LOG_$(LOG.PREFIX)_H_INCLUDED
+#endif // TRACE_$(TRACE.PREFIX)_H_INCLUDED
 .
-.output log.path+"../gen/src/log_$(log.prefix).c"
-#include "log_$(log.prefix).h"
+.output trace.path+"../gen/src/trace_$(trace.prefix).c"
+#include "trace_$(trace.prefix).h"
 
 #include "rb.h"
 #include "platform.h"
@@ -155,19 +155,19 @@ size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
     _v >>= 8; \\
     ENCODE_NUM_4(_b, (_v));
 
-static rb_t _rb = { .data_ = (uint8_t[$(log.length)]){0}, .capacity_ = $(log.length)};
+static rb_t _rb = { .data_ = (uint8_t[$(trace.length)]){0}, .capacity_ = $(trace.length)};
 
-static uint8_t log_$(log.prefix)_counter;
-.if log.filtering = "dynamic"
-static log_$(log.prefix)_level_e log_$(log.prefix)_curr_level = $(log.PREFIX)_$(log.LEVEL);
+static uint8_t trace_$(trace.prefix)_counter;
+.if trace.filtering = "dynamic"
+static trace_$(trace.prefix)_level_e trace_$(trace.prefix)_curr_level = $(trace.PREFIX)_$(trace.LEVEL);
 .endif
 
-static uint8_t _log_$(log.prefix)_crc(uint8_t *data, uint8_t len)
+static uint8_t _trace_$(trace.prefix)_crc(uint8_t *data, uint8_t len)
 {
     uint8_t crc = 0, i;
     uint8_t s = (data[0] == ESCAPE_BYTE) ? 2 : 1;
 
-.if ! defined (log.crc)
+.if ! defined (trace.crc)
     for(i = s; i < len; i++)
     {
         if(data[i] == ESCAPE_BYTE)
@@ -180,21 +180,21 @@ static uint8_t _log_$(log.prefix)_crc(uint8_t *data, uint8_t len)
 
     return ~crc;
 .else
-    return crc_$(log.crc:)(&data[s], len);
+    return crc_$(trace.crc:)(&data[s], len);
 .endif    
 }
 
-.if log.has_no_args ?> 1
-static void _log_$(log.prefix)_no_args(uint8_t uid)
+.if trace.has_no_args ?> 1
+static void _trace_$(trace.prefix)_no_args(uint8_t uid)
 {
     uint8_t tmp[15], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
     uint8_t crc;
-    ENCODE_NUM_1(b, log_$(log.prefix)_counter);
-    log_$(log.prefix)_counter++;
+    ENCODE_NUM_1(b, trace_$(trace.prefix)_counter);
+    trace_$(trace.prefix)_counter++;
     ENCODE_NUM_1(b, uid);
     ENCODE_NUM_4(b, ts);
-    crc = _log_$(log.prefix)_crc(tmp, b-tmp);
+    crc = _trace_$(trace.prefix)_crc(tmp, b-tmp);
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
@@ -213,39 +213,39 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
 .   gen_c_fn_declr (msg)
 
 {
-.   if log.filtering = "dynamic"
-    if (log_$(log.prefix)_curr_level <= $(log.PREFIX)_$(msg.LEVEL))
+.   if trace.filtering = "dynamic"
+    if (trace_$(trace.prefix)_curr_level <= $(trace.PREFIX)_$(msg.LEVEL))
     {
 .   endif
 .   if defined (msg.alias)   
-    _log_$(log.prefix)_$(msg.alias)_alias($(msg.uid), \
-.       for log.msg as ma where ma.id = msg.alias    
+    _trace_$(trace.prefix)_$(msg.alias)_alias($(msg.uid), \
+.       for trace.msg as ma where ma.id = msg.alias    
 .           gen_c_fn_args (ma)
 .       endfor
 );
 .   elsif defined (msg.is_aliased)   
-    _log_$(log.prefix)_$(msg.id)_alias($(msg.uid), \
+    _trace_$(trace.prefix)_$(msg.id)_alias($(msg.uid), \
 .       gen_c_fn_args (msg)
 );
 .   elsif (count (msg.arg) = 0)
-    _log_$(log.prefix)_no_args($(msg.uid));
+    _trace_$(trace.prefix)_no_args($(msg.uid));
 .   else
 .       gen_c_fn_body (msg)
 .   endif
-.   if log.filtering = "dynamic"
+.   if trace.filtering = "dynamic"
     }
 .   endif
 }
 
 .endfor
-.if log.filtering = "dynamic"
-void log_$(log.prefix)_set_level(log_$(log.prefix)_level_e level)
+.if trace.filtering = "dynamic"
+void trace_$(trace.prefix)_set_level(trace_$(trace.prefix)_level_e level)
 {
-    log_$(log.prefix)_curr_level = level;
+    trace_$(trace.prefix)_curr_level = level;
 }
 
 .endif
-size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes)
+size_t trace_$(trace.prefix)_get(uint8_t *data, size_t bytes)
 {
     size_t read = rb_read(&_rb, data, bytes);
     return read;

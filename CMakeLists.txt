@@ -24,20 +24,20 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/gen/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/example/include")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 
-set(COMMON_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/gen/src/log_fsm.c
+set(COMMON_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/gen/src/trace_fsm.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/rb.c)
 
 function(gsl_gen in_model)
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/gen/src/log_${in_model}.c 
-                            ${CMAKE_CURRENT_SOURCE_DIR}/gen/tests/log_${in_model}_test.c
-                            ${CMAKE_CURRENT_SOURCE_DIR}/gen/include/log_${in_model}.h
-                            ${CMAKE_CURRENT_SOURCE_DIR}/gen/log_${in_model}.py
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/gen/src/trace_${in_model}.c 
+                            ${CMAKE_CURRENT_SOURCE_DIR}/gen/tests/trace_${in_model}_test.c
+                            ${CMAKE_CURRENT_SOURCE_DIR}/gen/include/trace_${in_model}.h
+                            ${CMAKE_CURRENT_SOURCE_DIR}/gen/trace_${in_model}.py
     COMMAND ${GSLGEN} ${CMAKE_CURRENT_SOURCE_DIR}/models/${in_model}.xml ${ARGN}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/models/${in_model}.xml
     )
-  add_custom_target(gsl_${in_model} DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen/src/log_${in_model}.c)
-  add_executable(log_${in_model}_test ${CMAKE_CURRENT_SOURCE_DIR}/gen/tests/log_${in_model}_test.c ${COMMON_SRCS})
-  add_test(log_${in_model}_test log_${in_model}_test)
+  add_custom_target(gsl_${in_model} DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen/src/trace_${in_model}.c)
+  add_executable(trace_${in_model}_test ${CMAKE_CURRENT_SOURCE_DIR}/gen/tests/trace_${in_model}_test.c ${COMMON_SRCS})
+  add_test(trace_${in_model}_test trace_${in_model}_test)
 endfunction(gsl_gen)
 
 gsl_gen(fsm)

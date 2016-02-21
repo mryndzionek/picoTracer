@@ -12,7 +12,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 export PATH=../codecs:$PATH
-gsl -q -script:log_c $1
-gsl -q -script:log_tests $1
-gsl -q -script:log_python $1
+gsl -q -script:trace_c $1
+gsl -q -script:trace_tests $1
+gsl -q -script:trace_python $1
 exit $?

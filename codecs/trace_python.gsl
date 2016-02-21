@@ -1,6 +1,6 @@
 .template 0
 
-include "log_lib.gsl"
+include "trace_lib.gsl"
 
 s = verify_format_and_setup ()
 if s = -1
@@ -41,7 +41,7 @@ $(item (arg) - 1): $(arg.name)_enum\
 .endmacro
 .
 .copy_args_to_aliases()
-.output log.path+"../gen/python/TraceCfg.py"
+.output trace.path+"../gen/python/TraceCfg.py"
 import sys
 import struct
 import binascii
