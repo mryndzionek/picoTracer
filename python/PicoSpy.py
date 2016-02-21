@@ -14,15 +14,14 @@ parser.add_argument('-d', '--debug', default=False, action='store_true')
 args = parser.parse_args()
 
 if args.debug:
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s',
-                        datefmt='%m-%d %H:%M:%S',
-                        filemode='w')
+    lv = logging.DEBUG
 else:
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s',
-                        datefmt='%m-%d %H:%M:%S',
-                        filemode='w')
+    lv = logging.INFO
+
+logging.basicConfig(level=lv,
+                    format='%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M:%S',
+                    filemode='w')
 
 try:
     if args.input == 'serial':
