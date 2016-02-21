@@ -115,6 +115,9 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 .endmacro
 .
 .output trace.path+"../gen/include/trace_$(trace.prefix).h"
+/*
+$(trace.GENERATED_WARNING_HEADER:)
+*/
 #ifndef TRACE_$(TRACE.PREFIX)_H_INCLUDED
 #define TRACE_$(TRACE.PREFIX)_H_INCLUDED
 
@@ -143,6 +146,9 @@ size_t trace_$(trace.prefix)_get(uint8_t *data, size_t bytes);
 #endif // TRACE_$(TRACE.PREFIX)_H_INCLUDED
 .
 .output trace.path+"../gen/src/trace_$(trace.prefix).c"
+/*
+$(trace.GENERATED_WARNING_HEADER:)
+*/
 #include "trace_$(trace.prefix).h"
 
 #include "rb.h"

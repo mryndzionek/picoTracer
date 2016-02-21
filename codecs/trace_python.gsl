@@ -42,6 +42,7 @@ $(item (arg) - 1): $(arg.name)_enum\
 .
 .copy_args_to_aliases()
 .output trace.path+"../gen/python/TraceCfg.py"
+$(trace.GENERATED_WARNING_HEADER:)
 import sys
 import struct
 import binascii

@@ -1,6 +1,12 @@
 .template 0
 # Library functions
 
+trace.generated_warning_header ?= "\
+################################################################################
+#  THIS FILE IS 100% GENERATED; DO NOT EDIT EXCEPT EXPERIMENTALLY              #
+#  Please refer to the README for information about making permanent changes.  #
+################################################################################"
+
 function trace_level_to_value (level)
     if my.level = "ERROR"
         return 1

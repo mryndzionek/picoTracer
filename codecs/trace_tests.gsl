@@ -38,6 +38,9 @@ _e_$(arg.name)[seed % $(arg.length)]\
 .
 .copy_args_to_aliases()
 .output trace.path+"../gen/tests/trace_$(trace.prefix)_test.c"
+/*
+$(trace.GENERATED_WARNING_HEADER:)
+*/
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
