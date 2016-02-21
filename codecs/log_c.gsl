@@ -213,6 +213,10 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
 .   gen_c_fn_declr (msg)
 
 {
+.   if log.filtering = "dynamic"
+    if (log_$(log.prefix)_curr_level <= $(log.PREFIX)_$(msg.LEVEL))
+    {
+.   endif
 .   if defined (msg.alias)   
     _log_$(log.prefix)_$(msg.alias)_alias($(msg.uid), \
 .       for log.msg as ma where ma.id = msg.alias    
@@ -227,6 +231,9 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
     _log_$(log.prefix)_no_args($(msg.uid));
 .   else
 .       gen_c_fn_body (msg)
+.   endif
+.   if log.filtering = "dynamic"
+    }
 .   endif
 }
 
