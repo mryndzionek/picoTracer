@@ -102,10 +102,23 @@ static void _log_$(log.prefix)_$(my.msg.id)_alias(uint8_t uid, \
 #include <stdint.h>
 #include <stddef.h>
 
+.if log.filtering = "dynamic"
+typedef enum {
+    $(log.PREFIX)_TRACE = 0,
+    $(log.PREFIX)_DEBUG,
+    $(log.PREFIX)_INFO,
+    $(log.PREFIX)_WARN,
+    $(log.PREFIX)_ERROR,
+} log_$(log.prefix)_level_e;
+.endif
+
 .for msg
 .   gen_c_fn_declr (msg)
 ;
 .endfor
+.if log.filtering = "dynamic"
+void log_$(log.prefix)_set_level(log_$(log.prefix)_level_e level);
+.endif
 size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
 
 #endif // LOG_$(LOG.PREFIX)_H_INCLUDED
@@ -145,6 +158,9 @@ size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes);
 static rb_t _rb = { .data_ = (uint8_t[$(log.length)]){0}, .capacity_ = $(log.length)};
 
 static uint8_t log_$(log.prefix)_counter;
+.if log.filtering = "dynamic"
+static log_$(log.prefix)_level_e log_$(log.prefix)_curr_level = $(log.PREFIX)_$(log.LEVEL);
+.endif
 
 static uint8_t _log_$(log.prefix)_crc(uint8_t *data, uint8_t len)
 {
@@ -215,6 +231,13 @@ static void _log_$(log.prefix)_no_args(uint8_t uid)
 }
 
 .endfor
+.if log.filtering = "dynamic"
+void log_$(log.prefix)_set_level(log_$(log.prefix)_level_e level)
+{
+    log_$(log.prefix)_curr_level = level;
+}
+
+.endif
 size_t log_$(log.prefix)_get(uint8_t *data, size_t bytes)
 {
     size_t read = rb_read(&_rb, data, bytes);
