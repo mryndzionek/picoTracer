@@ -7,7 +7,7 @@ import TraceCfg
 
 parser = argparse.ArgumentParser(description='pictrace - trace decoder application')
 parser.add_argument('-i', '--input', choices=['file', 'serial'], default='serial')
-parser.add_argument('path', nargs='?', default='/dev/ttyUSB0:115200:8N1',
+parser.add_argument('path', nargs='?', default='/dev/ttyUSB0:230400:8N1',
                    help='path to file or serial port identifier')
 parser.add_argument('-b', '--block', default='10', type=int)
 parser.add_argument('-d', '--debug', default=False, action='store_true')
@@ -28,7 +28,7 @@ try:
         logging.info('Trying to open serial port: ' + args.path)
         rs = re.match('([^:]+):([0-9]+):([5678])([NOE])([12])', args.path)
         if rs:
-            reader = serial.Serial(rs.group(1), rs.group(2), timeout=0, bytesize=int(rs.group(3)),
+            reader = serial.Serial(rs.group(1), rs.group(2), timeout=None, bytesize=int(rs.group(3)),
                                 parity=rs.group(4), stopbits=int(rs.group(5)))
         else:
             raise ValueError('Wrong serial port format: ' + args.path)
@@ -37,15 +37,19 @@ try:
         reader = open(args.path, 'rb')
 
     try:
-        writer = open(args.path + '.csv', 'wb')
+        writer = open(os.path.basename(args.path) + '.csv', 'wb')
         try:
             cfg = TraceCfg.TraceCfg.cfg
             decoder = TraceDecoder.TraceDecoder(reader, writer, cfg)
             decoder.decode(args.block)
         finally:
+            logging.debug('Closing the writer')
             writer.close()
     finally:
+        logging.debug('Closing the reader')
         reader.close()
 
+except KeyboardInterrupt:
+    logging.info('Exiting due to user keyboard press')
 except (ValueError, IOError, serial.SerialException):
     logging.error(sys.exc_info()[1])
