@@ -132,8 +132,8 @@ typedef enum {
     $(trace.PREFIX)_WARN,
     $(trace.PREFIX)_ERROR,
 } trace_$(trace.prefix)_level_e;
-.endif
 
+.endif
 .for msg
 .   gen_c_fn_declr (msg)
 ;
@@ -152,7 +152,7 @@ $(trace.GENERATED_WARNING_HEADER:)
 #include "trace_$(trace.prefix).h"
 
 #include "rb.h"
-#include "platform.h"
+#include "trace_platform.h"
 
 #define END_FLAG           (0x7E)
 #define ESCAPE_BYTE        (0x7D)
@@ -252,7 +252,7 @@ static void _trace_$(trace.prefix)_no_args(uint8_t uid)
     _trace_$(trace.prefix)_$(msg.id)_alias($(msg.uid), \
 .       gen_c_fn_args (msg)
 );
-.   elsif (count (msg.arg) = 0)
+.   elsif (trace.has_no_args ?> 1) & (count (msg.arg) = 0)
     _trace_$(trace.prefix)_no_args($(msg.uid));
 .   else
 .       gen_c_fn_body (msg)
