@@ -1,7 +1,9 @@
-import sys, re
+import os, sys, re
 import argparse
 import logging
 import serial
+import datetime
+
 import TraceDecoder
 import TraceCfg
 
@@ -37,7 +39,10 @@ try:
         reader = open(args.path, 'rb')
 
     try:
-        writer = open(os.path.basename(args.path) + '.csv', 'wb')
+        ts_prefix = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        wname = ts_prefix + '-' + os.path.basename(args.path) + '.csv'
+        logging.info('Opening output file: ' + wname)
+        writer = open(wname, 'wb')
         try:
             cfg = TraceCfg.TraceCfg.cfg
             decoder = TraceDecoder.TraceDecoder(reader, writer, cfg)
