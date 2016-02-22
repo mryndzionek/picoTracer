@@ -27,4 +27,6 @@
 
     <msg id = "machine_init" level="INFO" format = "Module started"/>
     <msg id = "machine_deinit" level="INFO" format = "Module cleanup"/>
+    <msg id = "machine_deinit_a" level="INFO" format = "Module cleanup 2" alias = "machine_deinit"/>
+
 </trace>

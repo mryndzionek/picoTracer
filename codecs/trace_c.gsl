@@ -58,12 +58,18 @@ void trace_$(trace.prefix)_$(my.msg.id)(\
 .endmacro
 .
 .macro gen_c_fn_alias_declr (msg)
-static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid, \
+static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
 .   if defined (my.msg.alias)
 .       for trace.msg as ma where ma.id = my.msg.alias
+.           if first ()
+,\
+.           endif
 .           gen_c_fn_params (ma)
 .       endfor
 .   else
+.       if first ()
+,\
+.       endif
 .       gen_c_fn_params (my.msg)
 .endif
 )\
@@ -243,13 +249,19 @@ static void _trace_$(trace.prefix)_no_args(uint8_t uid)
     {
 .   endif
 .   if defined (msg.alias)   
-    _trace_$(trace.prefix)_$(msg.alias)_alias($(msg.uid), \
-.       for trace.msg as ma where ma.id = msg.alias    
+    _trace_$(trace.prefix)_$(msg.alias)_alias($(msg.uid)\
+.       for trace.msg as ma where ma.id = msg.alias
+.           if count (ma.arg) > 0
+,\
+.           endif
 .           gen_c_fn_args (ma)
 .       endfor
 );
 .   elsif defined (msg.is_aliased)   
-    _trace_$(trace.prefix)_$(msg.id)_alias($(msg.uid), \
+    _trace_$(trace.prefix)_$(msg.id)_alias($(msg.uid)\
+.       if count (msg.arg) > 0
+,\
+.       endif
 .       gen_c_fn_args (msg)
 );
 .   elsif (trace.has_no_args ?> 1) & (count (msg.arg) = 0)
