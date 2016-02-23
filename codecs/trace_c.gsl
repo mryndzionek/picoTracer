@@ -62,13 +62,13 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
 .   if defined (my.msg.alias)
 .       for trace.msg as ma where ma.id = my.msg.alias
 .           if first ()
-,\
+, \
 .           endif
 .           gen_c_fn_params (ma)
 .       endfor
 .   else
 .       if first ()
-,\
+, \
 .       endif
 .       gen_c_fn_params (my.msg)
 .endif
@@ -82,17 +82,13 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
 .           my.tmpsize = trace.block_size
 .       endif
     uint8_t tmp[$(my.tmpsize)], *b = tmp;
-    uint32_t ts = GET_TIMESTAMP;
     uint8_t crc = 0;
 
-    ENCODE_NUM_1(b, trace_$(trace.prefix)_counter);
-    trace_$(trace.prefix)_counter++;
 .       if defined (my.msg.is_aliased)
-    ENCODE_NUM_1(b, uid);
+    b = trace_$(trace.prefix)_add_header(b, uid);
 .       else
-    ENCODE_NUM_1(b, $(my.msg.uid));
+    b = trace_$(trace.prefix)_add_header(b, $(my.msg.uid));
 .       endif
-    ENCODE_NUM_4(b, ts);
 .       my.size_left = my.tmpsize - 12
     // Here we have at most $(my.size_left) bytes left in the buffer
 .       for arg
@@ -112,7 +108,8 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
     (void)rb_write(&_rb, tmp, b-tmp);
     b = tmp;
 .       endif
-    ENCODE_NUM_1(b, ~crc);
+    crc = ~crc;
+    ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
 .   else
@@ -214,17 +211,25 @@ static uint8_t _trace_$(trace.prefix)_crc(uint8_t *data, uint8_t len)
 .endif    
 }
 
-.if trace.has_no_args ?> 1
-static void _trace_$(trace.prefix)_no_args(uint8_t uid)
+static uint8_t *trace_$(trace.prefix)_add_header(uint8_t *b, uint8_t uid)
 {
-    uint8_t tmp[15], *b = tmp;
     uint32_t ts = GET_TIMESTAMP;
-    uint8_t crc;
 
     ENCODE_NUM_1(b, trace_$(trace.prefix)_counter);
     trace_$(trace.prefix)_counter++;
     ENCODE_NUM_1(b, uid);
     ENCODE_NUM_4(b, ts);
+
+    return b;
+}
+
+.if trace.has_no_args ?> 1
+static void _trace_$(trace.prefix)_no_args(uint8_t uid)
+{
+    uint8_t tmp[15], *b = tmp;
+    uint8_t crc = 0;
+
+    b = trace_$(trace.prefix)_add_header(b, uid);
     crc = ~_trace_$(trace.prefix)_crc(tmp, b-tmp);
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
