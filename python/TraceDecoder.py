@@ -115,7 +115,7 @@ class TraceDecoder(object):
 
         return log
             
-    def decode(self, block = 10):
+    def decode(self, block = 1):
         i = -1
         
         # read data from file one block at a time

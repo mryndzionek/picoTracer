@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='pictrace - trace decoder applicati
 parser.add_argument('-i', '--input', choices=['file', 'serial'], default='serial')
 parser.add_argument('path', nargs='?', default='/dev/ttyUSB0:230400:8N1',
                    help='path to file or serial port identifier')
-parser.add_argument('-b', '--block', default='10', type=int)
+parser.add_argument('-b', '--block', default='1', type=int)
 parser.add_argument('-d', '--debug', default=False, action='store_true')
 args = parser.parse_args()
 
