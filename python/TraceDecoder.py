@@ -96,11 +96,10 @@ class TraceDecoder(object):
 
         logging.debug ("Decoding data: " + self._format_hex(data))    
 
-        frames = self._split(bytearray(data))
-
         #cumulate the last remainder
-        self.tmp_buf.extend(frames[0])
-        frames[0] = self.tmp_buf
+        self.tmp_buf.extend(bytearray(data))
+        data = self.tmp_buf
+        frames = self._split(self.tmp_buf)
 
         for frame in frames:
             if frame:
@@ -111,6 +110,8 @@ class TraceDecoder(object):
                     self.reset()
                 else:
                     self.tmp_buf = frame
+                    if data[-1] == 0x7E:
+                        self.tmp_buf.append(0x7E)
 
         return log
             
