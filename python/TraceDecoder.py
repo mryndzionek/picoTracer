@@ -127,6 +127,6 @@ class TraceDecoder(object):
             for msg in l:
                     self.writer.write('{0}, {1}, {2}, {3}, {4}\n'.format(msg[0], msg[1], msg[2], msg[3], self._format_hex(msg[4])))
                     self.writer.flush()
-                    if (i > -1) and (msg[0] - i) > 1:
-                            logging.warn("Possible logs discontinuity detected. Missed " + str(msg[0] - i - 1) + " message(s)")
+                    if (i > -1) and (msg[0] - i) != 1:
+                        logging.warn("Possible logs discontinuity detected. Missed " + str(abs(msg[0] - i - 1)) + " message(s)")
                     i = msg[0]
