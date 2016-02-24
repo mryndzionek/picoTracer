@@ -21,12 +21,17 @@ $(arg.name:no)\
 .endmacro
 .
 .macro gen_unused_args (msg)
-.   if defined (my.msg.is_aliased)
-    (void)uid;
-.   endif
-.   for my.msg.arg
+.   if defined (my.msg.alias)
+.       for trace.msg as ma where my.msg.alias = ma.id
+.           for ma.arg
     (void)$(arg.name);
-.   endfor
+.           endfor
+.       endfor
+.   else
+.       for my.msg.arg
+    (void)$(arg.name);
+.       endfor
+.   endif
 .endmacro
 .
 .macro gen_c_fn_params (msg)
@@ -76,7 +81,6 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
 .endmacro
 .
 .macro gen_c_fn_body (msg)
-.   if trace.filtering = "dynamic" | (my.msg.level_v <= trace.level_v)
 .       my.tmpsize = 2*(7+my.msg.bsize)+1
 .       if my.tmpsize > trace.block_size
 .           my.tmpsize = trace.block_size
@@ -112,9 +116,6 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
-.   else
-.       gen_unused_args (my.msg)
-.   endif
 .endmacro
 .
 .output trace.path+"../gen/include/trace_$(trace.prefix).h"
@@ -253,26 +254,30 @@ static void _trace_$(trace.prefix)_no_args(uint8_t uid)
     if (trace_$(trace.prefix)_curr_level <= $(trace.PREFIX)_$(msg.LEVEL))
     {
 .   endif
-.   if defined (msg.alias)   
+.   if (trace.filtering = "dynamic") | (msg.level_v <= trace.level_v)
+.       if defined (msg.alias)   
     _trace_$(trace.prefix)_$(msg.alias)_alias($(msg.uid)\
-.       for trace.msg as ma where ma.id = msg.alias
-.           if count (ma.arg) > 0
+.           for trace.msg as ma where ma.id = msg.alias
+.               if count (ma.arg) > 0
+,\
+.               endif
+.               gen_c_fn_args (ma)
+.           endfor
+);
+.       elsif defined (msg.is_aliased)   
+    _trace_$(trace.prefix)_$(msg.id)_alias($(msg.uid)\
+.           if count (msg.arg) > 0
 ,\
 .           endif
-.           gen_c_fn_args (ma)
-.       endfor
+.           gen_c_fn_args (msg)
 );
-.   elsif defined (msg.is_aliased)   
-    _trace_$(trace.prefix)_$(msg.id)_alias($(msg.uid)\
-.       if count (msg.arg) > 0
-,\
-.       endif
-.       gen_c_fn_args (msg)
-);
-.   elsif (trace.has_no_args ?> 1) & (count (msg.arg) = 0)
+.       elsif (trace.has_no_args ?> 1) & (count (msg.arg) = 0)
     _trace_$(trace.prefix)_no_args($(msg.uid));
+.       else
+.           gen_c_fn_body (msg)
+.       endif
 .   else
-.       gen_c_fn_body (msg)
+.       gen_unused_args(msg)
 .   endif
 .   if trace.filtering = "dynamic"
     }

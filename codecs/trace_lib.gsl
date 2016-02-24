@@ -154,7 +154,9 @@ function verify_format_and_setup ()
                     echo "E: Message cannot alias aliased message '$(a.id:no) -> $(a.alias:no)'"
                     return -1
                 else
-                    m.is_aliased = 1
+                    if trace.filtering = "dynamic" | (m.level_v <= trace.level_v)
+                        m.is_aliased = 1
+                    endif
                 endif
             endfor
         endif    
