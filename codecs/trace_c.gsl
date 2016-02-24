@@ -61,13 +61,13 @@ void trace_$(trace.prefix)_$(my.msg.id)(\
 static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
 .   if defined (my.msg.alias)
 .       for trace.msg as ma where ma.id = my.msg.alias
-.           if first ()
+.           if count(ma.arg) > 0
 , \
 .           endif
 .           gen_c_fn_params (ma)
 .       endfor
 .   else
-.       if first ()
+.       if count(my.msg.arg) > 0
 , \
 .       endif
 .       gen_c_fn_params (my.msg)
