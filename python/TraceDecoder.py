@@ -3,6 +3,7 @@ import struct
 import logging
 import binascii
 import re
+import datetime
 
 class MsgDecoder(object):
     def __init__(self, level, format, structure, enums = {}):
@@ -115,21 +116,42 @@ class TraceDecoder(object):
 
         return log
             
-    def decode(self, block = 1):
-        i = -1
+    def decode(self):
+        i = -2
         
         # read data from file one block at a time
-        data = bytearray(self.reader.read(block))
+        data = bytearray(self.reader.read(1))
         while data:
             
             l = self._decode_data(data)
-            data = self.reader.read(block)
-            for msg in l:
-                    self.writer.write('{0}, {1}, {2}, {3}, {4}\n'.format(msg[0], msg[1], msg[2], msg[3], self._format_hex(msg[4])))
-                    self.writer.flush()
-                    c = msg[0]
+
+            for counter, timer, level, message, frame in l:
+
+                    if (i == -2):
+                        ts = datetime.datetime.now()
+                        last_timer = timer
+                    else:
+                        ts +=  datetime.timedelta(milliseconds=timer-last_timer)
+                        last_timer = timer
+
                     if i == 255:
                         i = -1
-                    if (i > -2) and (c - i) != 1:
-                            logging.warn("Possible logs discontinuity detected. Missed " + str(abs(c - i - 1)) + " message(s)")
-                    i = msg[0]
+                    if (i > -2) and (counter - i) != 1:
+                            logging.warn("Possible logs discontinuity detected. Missed at least " + str(abs(counter - i - 1)) + " message(s)")
+                            ts = datetime.datetime.now()
+                            last_timer = timer
+                    i = counter
+
+                    self.writer.write('{0}, {1}, {2}, {3}, {4}, {5}\n'.format(
+                    ts.strftime('%Y-%m-%d %H:%M:%S.') + ts.strftime('%f')[:3], 
+                    counter, 
+                    timer, 
+                    level, 
+                    message, 
+                    self._format_hex(frame)))
+                    self.writer.flush()
+
+            pending = self.reader.inWaiting()
+            if pending == 0:
+                pending = 6
+            data = self.reader.read(pending)
