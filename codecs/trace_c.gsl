@@ -250,6 +250,7 @@ static void _trace_$(trace.prefix)_no_args(uint8_t uid)
 .   gen_c_fn_declr (msg)
 
 {
+#ifdef TRACE_$(trace.PREFIX)_ENABLE
 .   if trace.filtering = "dynamic"
     if (trace_$(trace.prefix)_curr_level <= $(trace.PREFIX)_$(msg.LEVEL))
     {
@@ -282,6 +283,7 @@ static void _trace_$(trace.prefix)_no_args(uint8_t uid)
 .   if trace.filtering = "dynamic"
     }
 .   endif
+#endif
 }
 
 .endfor
@@ -294,5 +296,7 @@ void trace_$(trace.prefix)_set_level(trace_$(trace.prefix)_level_e level)
 .endif
 size_t trace_$(trace.prefix)_get(uint8_t *data, size_t bytes)
 {
+#ifdef TRACE_TICTO_ENABLE
     return rb_read(&_rb, data, bytes);
+#endif
 }
