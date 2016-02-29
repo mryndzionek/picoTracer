@@ -25,6 +25,7 @@ endfunction
 
 function verify_format_and_setup ()
     trace.filtering ?= "static"
+    trace.crc ?= "default"
     trace.block_size ?= 64
     if trace.block_size < 16
         trace.block_size = 16

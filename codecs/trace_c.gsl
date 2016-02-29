@@ -88,6 +88,8 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
     uint8_t tmp[$(my.tmpsize)], *b = tmp;
     uint8_t crc = 0;
 
+    crc_$(trace.crc:)_init();
+
 .       if defined (my.msg.is_aliased)
     b = trace_$(trace.prefix)_add_header(b, uid);
 .       else
@@ -112,7 +114,8 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
     (void)rb_write(&_rb, tmp, b-tmp);
     b = tmp;
 .       endif
-    crc = ~crc;
+    crc_$(trace.crc:)_finish();
+    crc_$(trace.crc:)_deinit();
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
@@ -184,6 +187,15 @@ $(trace.GENERATED_WARNING_HEADER:)
     _v >>= 8; \\
     ENCODE_NUM_4(_b, (_v));
 
+.if trace.crc = "default"
+#define crc_default_init()
+#define crc_default_deinit()
+#define crc_default_setup uint8_t crc = 0
+#define crc_default_update(_data) (crc += (_data))
+#define crc_default_finish() (crc = ~crc)
+#define crc_default_get() (crc)
+.endif
+
 static rb_t _rb = { .data_ = (uint8_t[$(trace.length)]){0}, .capacity_ = $(trace.length)};
 
 static uint8_t trace_$(trace.prefix)_counter;
@@ -193,23 +205,21 @@ static trace_$(trace.prefix)_level_e trace_$(trace.prefix)_curr_level = $(trace.
 
 static uint8_t _trace_$(trace.prefix)_crc(uint8_t *data, uint8_t len)
 {
-    uint8_t crc = 0, i;
+    uint8_t i;
+    crc_$(trace.crc:)_setup;
 
-.if ! defined (trace.crc)
     for(i = 0; i < len; i++)
     {
         if(data[i] == ESCAPE_BYTE)
         {
-            crc += (data[++i] ^ 0x20);
+            crc_$(trace.crc:)_update(data[++i] ^ 0x20);
         }
-        else    
-            crc += data[i];   
+        else
+        {
+            crc_$(trace.crc:)_update(data[i]);
+        }
     }
-
-    return crc;
-.else
-    return crc_$(trace.crc:)(&data[s], len);
-.endif    
+    return crc_$(trace.crc:)_get();
 }
 
 static uint8_t *trace_$(trace.prefix)_add_header(uint8_t *b, uint8_t uid)
@@ -231,7 +241,10 @@ static void _trace_$(trace.prefix)_no_args(uint8_t uid)
     uint8_t crc = 0;
 
     b = trace_$(trace.prefix)_add_header(b, uid);
-    crc = ~_trace_$(trace.prefix)_crc(tmp, b-tmp);
+    crc_$(trace.crc:)_init();
+    crc = _trace_$(trace.prefix)_crc(tmp, b-tmp);
+    crc_$(trace.crc:)_finish();
+    crc_$(trace.crc:)_deinit();
     ENCODE_NUM_1(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
