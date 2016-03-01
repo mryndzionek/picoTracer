@@ -29,15 +29,15 @@ try:
         logging.info('Trying to open serial port: ' + args.path)
         rs = re.match('([^:]+):([0-9]+):([5678])([NOE])([12])', args.path)
         if rs:
-            sp = serial.Serial(rs.group(1), rs.group(2), timeout=None, bytesize=int(rs.group(3)),
+            breader = serial.Serial(rs.group(1), rs.group(2), timeout=None, bytesize=int(rs.group(3)),
                                 parity=rs.group(4), stopbits=int(rs.group(5)))
-            reader = TraceDecoder.SerialTraceReader(sp, 1)
+            reader = TraceDecoder.SerialTraceReader(breader, 1)
         else:
             raise ValueError('Wrong serial port format: ' + args.path)
     else:
         logging.info('Trying to open file: ' + args.path)
-        f = open(args.path, 'rb')
-        reader = TraceDecoder.FileTraceReader(f, 1000)
+        breader = open(args.path, 'rb')
+        reader = TraceDecoder.FileTraceReader(breader, 1000)
 
     try:
         ts_prefix = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
@@ -52,7 +52,7 @@ try:
             writer.close()
     finally:
         logging.debug('Closing the reader')
-        reader.close()
+        breader.close()
 
 except KeyboardInterrupt:
     logging.info('Exiting due to user keyboard press')

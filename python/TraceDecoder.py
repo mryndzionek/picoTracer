@@ -30,9 +30,6 @@ class TraceReader(object):
     def read(self):
         pass
 
-    def close(self):
-        self.reader.close()
-
 class SerialTraceReader(TraceReader):
 
     def read(self):
