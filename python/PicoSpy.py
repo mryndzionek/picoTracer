@@ -43,13 +43,14 @@ try:
         ts_prefix = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         wname = ts_prefix + '-' + os.path.basename(args.path) + '.csv'
         logging.info('Opening output file: ' + wname)
-        writer = open(wname, 'wb')
+        bwriter = open(wname, 'wb')
+        exporter = TraceDecoder.CSVTraceExporter(bwriter)
         try:
-            decoder = TraceDecoder.TraceDecoder(reader, writer, TraceCfg.TraceCfg)
+            decoder = TraceDecoder.TraceDecoder(reader, exporter, TraceCfg.TraceCfg)
             decoder.decode()
         finally:
             logging.debug('Closing the writer')
-            writer.close()
+            bwriter.close()
     finally:
         logging.debug('Closing the reader')
         breader.close()

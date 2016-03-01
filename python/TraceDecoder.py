@@ -44,15 +44,57 @@ class FileTraceReader(TraceReader):
     def read(self):
         return self.reader.read(self.block_size)
 
+class TraceExporter(object):
+    def __init__(self, writer):
+        self.writer = writer
+        self.i = -2
+
+    def _convert(self, ts, counter, timer, level, message, hex_str):
+        pass
+
+    def push(self, lines):
+        for counter, timer, level, message, frame in lines:
+            if (self.i == -2):
+                self.ts = datetime.datetime.now()
+                self.last_timer = timer
+            else:
+                self.ts +=  datetime.timedelta(milliseconds=timer-self.last_timer)
+                self.last_timer = timer
+
+            if self.i == 255:
+                self.i = -1
+            if (self.i > -2) and (counter - self.i) != 1:
+                logging.warn("Possible logs discontinuity detected. Missed at least " + str(abs(counter - self.i - 1)) + " message(s)")
+                self.ts = datetime.datetime.now()
+                last_timer = timer
+            self.i = counter
+
+            ts_str = self.ts.strftime('%Y-%m-%d %H:%M:%S.') + self.ts.strftime('%f')[:3]
+            hex_str = TraceDecoder.format_hex(frame)
+            self._convert(ts_str, counter, timer, level, message, hex_str)
+            self.writer.flush()
+
+class CSVTraceExporter(TraceExporter):
+
+    def _convert(self, ts, counter, timer, level, message, hex_str):
+        self.writer.write('{0}, {1}, {2}, {3}, {4}, {5}\n'.format(
+            ts, 
+            counter, 
+            timer, 
+            level, 
+            message, 
+            hex_str))
+
 class TraceDecoder(object):
 
-    def __init__(self, reader, writer, cfg):
+    def __init__(self, reader, exporter, cfg):
         self.reader = reader
-        self.writer = writer
+        self.exporter = exporter
         self.cfg = cfg
         self.reset()
 
-    def _format_hex(self, msg):
+    @staticmethod
+    def format_hex(msg):
         m = binascii.hexlify(msg)
         return ' '.join(m[i:i+2] for i in range(0, len(m), 2))
    
@@ -83,7 +125,7 @@ class TraceDecoder(object):
         return (~crc) & 0xFF
 
     def _crc_check(self, data, expected_crc):
-        logging.debug ("Computing CRC on: " + self._format_hex(data))
+        logging.debug ("Computing CRC on: " + TraceDecoder.format_hex(data))
 
         crc = self._default_crc(data)
 
@@ -107,7 +149,7 @@ class TraceDecoder(object):
                     crc = self.cfg.crc_decoder.unpack_from(frame, 6+decoder.size)[0]
                     if self._crc_check(frame[:-self.cfg.crc_decoder.size], crc):
                         l = (cnt,) + (timestamp,) + decoder.decode(frame[6:]) + (frame,)
-                        logging.info ("Recovered valid frame: " + self._format_hex(frame))
+                        logging.info ("Recovered valid frame: " + TraceDecoder.format_hex(frame))
                         return l
 
             return None
@@ -118,7 +160,7 @@ class TraceDecoder(object):
     def _decode_data(self, data):
         log = []
 
-        logging.debug ("Decoding data: " + self._format_hex(data))    
+        logging.debug ("Decoding data: " + TraceDecoder.format_hex(data))    
 
         #cumulate the last remainder
         self.tmp_buf.extend(bytearray(data))
@@ -127,7 +169,7 @@ class TraceDecoder(object):
 
         for frame in frames:
             if frame:
-                logging.debug ("Processing frame: " + self._format_hex(frame))
+                logging.debug ("Processing frame: " + TraceDecoder.format_hex(frame))
                 l = self._parse(frame)
                 if l:
                     log.append(l)
@@ -145,33 +187,7 @@ class TraceDecoder(object):
         # read data from file one block at a time
         data = bytearray(self.reader.read())
         while data:
-            
             l = self._decode_data(data)
-
-            for counter, timer, level, message, frame in l:
-
-                    if (i == -2):
-                        ts = datetime.datetime.now()
-                        last_timer = timer
-                    else:
-                        ts +=  datetime.timedelta(milliseconds=timer-last_timer)
-                        last_timer = timer
-
-                    if i == 255:
-                        i = -1
-                    if (i > -2) and (counter - i) != 1:
-                            logging.warn("Possible logs discontinuity detected. Missed at least " + str(abs(counter - i - 1)) + " message(s)")
-                            ts = datetime.datetime.now()
-                            last_timer = timer
-                    i = counter
-
-                    self.writer.write('{0}, {1}, {2}, {3}, {4}, {5}\n'.format(
-                    ts.strftime('%Y-%m-%d %H:%M:%S.') + ts.strftime('%f')[:3], 
-                    counter, 
-                    timer, 
-                    level, 
-                    message, 
-                    self._format_hex(frame)))
-                    self.writer.flush()
+            self.exporter.push(l)
 
             data = self.reader.read()
