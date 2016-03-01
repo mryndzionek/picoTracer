@@ -8,7 +8,7 @@ set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
 set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra -pedantic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra -pedantic -Wno-unused -DTRACE_FSM_ENABLE")
 
 link_libraries(m)
 

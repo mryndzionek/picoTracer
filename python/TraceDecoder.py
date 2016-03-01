@@ -4,6 +4,7 @@ import logging
 import binascii
 import re
 import datetime
+import time
 
 class MsgDecoder(object):
     def __init__(self, level, format, structure, enums = {}):
@@ -21,12 +22,37 @@ class MsgDecoder(object):
             
         return (self.l, self.f.format(*values))
 
+class TraceReader(object):
+    def __init__(self, base_reader, block_size):
+        self.reader = base_reader
+        self.block_size = block_size
+
+    def read(self):
+        pass
+
+    def close(self):
+        self.reader.close()
+
+class SerialTraceReader(TraceReader):
+
+    def read(self):
+        time.sleep(0.1)
+        pending = self.reader.inWaiting()
+        if pending < self.block_size:
+            pending = self.block_size
+        return self.reader.read(pending)
+
+class FileTraceReader(TraceReader):
+
+    def read(self):
+        return self.reader.read(self.block_size)
+
 class TraceDecoder(object):
 
     def __init__(self, reader, writer, cfg):
         self.reader = reader
         self.writer = writer
-        self.cfg = cfg            
+        self.cfg = cfg
         self.reset()
 
     def _format_hex(self, msg):
@@ -72,17 +98,17 @@ class TraceDecoder(object):
 
     def _parse(self, data):
     
-        frame = self._unescape(data)    
+        frame = self._unescape(data)
         if len (frame) >= 6:
             cnt = frame[0]
             uid = frame[1]
             timestamp = struct.unpack_from('I', frame, 2)[0]
 
-            if uid in self.cfg:
-                decoder = self.cfg.get(uid)
-                if len (frame[6:]) >= decoder.size+1:
-                    crc = frame[6+decoder.size]
-                    if self._crc_check(frame[:-1], crc):
+            if uid in self.cfg.cfg:
+                decoder = self.cfg.cfg.get(uid)
+                if len (frame[6:]) >= decoder.size+self.cfg.crc_decoder.size:
+                    crc = self.cfg.crc_decoder.unpack_from(frame, 6+decoder.size)[0]
+                    if self._crc_check(frame[:-self.cfg.crc_decoder.size], crc):
                         l = (cnt,) + (timestamp,) + decoder.decode(frame[6:]) + (frame,)
                         logging.info ("Recovered valid frame: " + self._format_hex(frame))
                         return l
@@ -120,7 +146,7 @@ class TraceDecoder(object):
         i = -2
         
         # read data from file one block at a time
-        data = bytearray(self.reader.read(1))
+        data = bytearray(self.reader.read())
         while data:
             
             l = self._decode_data(data)
@@ -151,7 +177,4 @@ class TraceDecoder(object):
                     self._format_hex(frame)))
                     self.writer.flush()
 
-            pending = self.reader.inWaiting()
-            if pending == 0:
-                pending = 6
-            data = self.reader.read(pending)
+            data = self.reader.read()

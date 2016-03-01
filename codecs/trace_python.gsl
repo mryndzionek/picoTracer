@@ -9,19 +9,23 @@ endif
 
 endtemplate
 .
+.macro size_to_symbol(size)
+.   if my.size = 1
+ B \
+.   elsif my.size = 2 
+ H \
+.   elsif my.size = 4
+ I \
+.   elsif my.size = 8
+ Q \
+.   endif
+.endmacro
+.
 .macro gen_struct_format (msg)
 '= \
 .   for my.msg.arg as arg
 .       if arg.type = "number" | arg.type = "enum"
-.           if arg.size = 1
- B \
-.           elsif arg.size = 2 
- H \
-.           elsif arg.size = 4
- I \
-.           elsif arg.size = 8
- Q \
-.           endif
+.           size_to_symbol(arg.size)
 .       endif
 .   endfor
 '\
@@ -67,5 +71,10 @@ class TraceCfg(object):
 ),
 
 .endfor
+
     };
+
+    crc_decoder = struct.Struct('=\
+.size_to_symbol (trace.crc_size)
+');
 

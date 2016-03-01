@@ -26,9 +26,20 @@ endfunction
 function verify_format_and_setup ()
     trace.filtering ?= "static"
     trace.crc ?= "default"
+    if !(trace.crc = "default")
+        if ! defined (trace.crc_size)
+            echo "E: CRC size not defined"
+            return -1
+        elsif !((trace.crc_size = 1) | (trace.crc_size = 2) | (trace.crc_size = 4) | (trace.crc_size = 8))
+            echo "E: Wrong CRC size"
+            return -1
+        endif
+    else
+        trace.crc_size = 1
+    endif
     trace.block_size ?= 64
-    if trace.block_size < 16
-        trace.block_size = 16
+    if trace.block_size < 2*(7 + trace.crc_size)
+        trace.block_size = 2*(7 + trace.crc_size)
     endif
     if !((trace.filtering = "static") | (trace.filtering = "dynamic"))
         echo "E: Wrong filtering value '$(trace.filtering)'. Must be 'static' or 'dynamic'"
@@ -136,7 +147,7 @@ function verify_format_and_setup ()
             endif
         endfor    
         msg.bsize = _bsize
-        trace.bsize = trace.bsize + 8 + _bsize
+        trace.bsize = trace.bsize + 7 + trace.crc_size + _bsize
     endfor
     for msg where defined (a.alias) as a
         if a.id = a.alias

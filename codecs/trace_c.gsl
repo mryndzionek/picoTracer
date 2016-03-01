@@ -81,12 +81,12 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
 .endmacro
 .
 .macro gen_c_fn_body (msg)
-.       my.tmpsize = 2*(7+my.msg.bsize)+1
+.       my.tmpsize = 2*(6+trace.crc_size+my.msg.bsize)+1
 .       if my.tmpsize > trace.block_size
 .           my.tmpsize = trace.block_size
 .       endif
     uint8_t tmp[$(my.tmpsize)], *b = tmp;
-    uint8_t crc = 0;
+    uint$(8*trace.crc_size)_t crc = 0;
 
     crc_$(trace.crc:)_init();
 
@@ -116,7 +116,7 @@ static void _trace_$(trace.prefix)_$(my.msg.id)_alias(uint8_t uid\
 .       endif
     crc_$(trace.crc:)_finish();
     crc_$(trace.crc:)_deinit();
-    ENCODE_NUM_1(b, crc);
+    ENCODE_NUM_$(trace.crc_size)(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
 .endmacro
@@ -238,14 +238,14 @@ static uint8_t *trace_$(trace.prefix)_add_header(uint8_t *b, uint8_t uid)
 static void _trace_$(trace.prefix)_no_args(uint8_t uid)
 {
     uint8_t tmp[15], *b = tmp;
-    uint8_t crc = 0;
+    uint$(8*trace.crc_size)_t crc = 0;
 
     b = trace_$(trace.prefix)_add_header(b, uid);
     crc_$(trace.crc:)_init();
     crc = _trace_$(trace.prefix)_crc(tmp, b-tmp);
     crc_$(trace.crc:)_finish();
     crc_$(trace.crc:)_deinit();
-    ENCODE_NUM_1(b, crc);
+    ENCODE_NUM_$(trace.crc_size)(b, crc);
     *(b++) = END_FLAG;
     (void)rb_write(&_rb, tmp, b-tmp);
 }
@@ -309,7 +309,5 @@ void trace_$(trace.prefix)_set_level(trace_$(trace.prefix)_level_e level)
 .endif
 size_t trace_$(trace.prefix)_get(uint8_t *data, size_t bytes)
 {
-#ifdef TRACE_TICTO_ENABLE
     return rb_read(&_rb, data, bytes);
-#endif
 }

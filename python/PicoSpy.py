@@ -9,7 +9,7 @@ import TraceCfg
 
 parser = argparse.ArgumentParser(description='pictrace - trace decoder application')
 parser.add_argument('-i', '--input', choices=['file', 'serial'], default='serial')
-parser.add_argument('path', nargs='?', default='/dev/ttyUSB0:230400:8N1',
+parser.add_argument('path', nargs='?', default='/dev/ttyUSB0:576000:8N1',
                    help='path to file or serial port identifier')
 parser.add_argument('-d', '--debug', default=False, action='store_true')
 args = parser.parse_args()
@@ -29,13 +29,15 @@ try:
         logging.info('Trying to open serial port: ' + args.path)
         rs = re.match('([^:]+):([0-9]+):([5678])([NOE])([12])', args.path)
         if rs:
-            reader = serial.Serial(rs.group(1), rs.group(2), timeout=None, bytesize=int(rs.group(3)),
+            sp = serial.Serial(rs.group(1), rs.group(2), timeout=None, bytesize=int(rs.group(3)),
                                 parity=rs.group(4), stopbits=int(rs.group(5)))
+            reader = TraceDecoder.SerialTraceReader(sp, 1)
         else:
             raise ValueError('Wrong serial port format: ' + args.path)
     else:
         logging.info('Trying to open file: ' + args.path)
-        reader = open(args.path, 'rb')
+        f = open(args.path, 'rb')
+        reader = TraceDecoder.FileTraceReader(f, 1000)
 
     try:
         ts_prefix = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
@@ -43,8 +45,7 @@ try:
         logging.info('Opening output file: ' + wname)
         writer = open(wname, 'wb')
         try:
-            cfg = TraceCfg.TraceCfg.cfg
-            decoder = TraceDecoder.TraceDecoder(reader, writer, cfg)
+            decoder = TraceDecoder.TraceDecoder(reader, writer, TraceCfg.TraceCfg)
             decoder.decode()
         finally:
             logging.debug('Closing the writer')
