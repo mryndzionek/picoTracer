@@ -1,5 +1,5 @@
-PicoSpy - lightweight tracing framework
-=======================================
+PicoTracer - lightweight tracing framework
+==========================================
 
 Introduction
 ------------
