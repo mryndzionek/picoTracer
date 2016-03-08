@@ -1,0 +1,9 @@
+                           .----------------------.
+.-----------.    #---#     |C serialization code  |
+|GSL scripts+--->|GSL+---->|trace format test app |
+'-----------'    #---#     |Python decoder class  |
+                   ^       '----------------------'
+                   |
+              .---------.
+              |XML model|
+              '---------'

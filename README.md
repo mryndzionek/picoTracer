@@ -11,22 +11,38 @@ can be drained bit-by-bit at times when processing power is available (idle stat
 Structure of the project
 ------------------------
 
+![fig1](../blob/master/images/fig1.png)
+
 Protocol specification
 ----------------------
+
+![fig2](../blob/master/images/fig2.png)
+
+Syntax in ABNF format:
 ```
 pico-frame      = counter uid timestamp payload crc FLAG
-counter         = 1*2HDLC
-uid             = 1*2HDLC
-timestamp       = 4*8HDLC
-payload         = *256HDL
-crc             = 1*2HDLC
+counter         = HDLC
+uid             = HDLC
+timestamp       = 4HDLC
+payload         = *256HDLC
+crc             = HDLC
 
-HDLC            = %x00-7D / %x7F-FF
+HDLC            = *1%x7D (%x00-7D / %x7F-FF)
 FLAG            = %x7E
 ```
 
+The protocol uses HDLC 'octet stuffing'.
+This is reflected in the HDLC rule - the FLAG octet is escaped.
+
 XML model format
 ----------------
+The basic description can be found [here](../blob/master/models/fsm.xml).
+
+Dependencies
+------------
+Code generator is implemented in [GSL](https://github.com/imatix/gsl).
+The ASCII figures are converted to graphics using [ASCIIToSVG](https://bitbucket.org/dhobsd/asciitosvg) 
+(see the `tools/gen_images.sh` script).
 
 Build instructions
 ------------------
@@ -43,11 +59,11 @@ TODO
 ----
   - [ ] Add more info to this README
   - [ ] Add more examples
-  - [x] Add generated tests to CTest under CMake
+  - [x] Fully support generated tests in CTest under CMake
   - [x] Runtime trace level handling
   - [x] Implement integrity checking
   - [ ] Add different serialization strategies
-  - [ ] Limit temporary buffers size
+  - [x] Limit temporary buffers size
 
 License
 -------

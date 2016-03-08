@@ -1,0 +1,68 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with ASCIIToSVG (http://9vx.org/~dho/a2s/) -->
+<svg width="459px" height="160px" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <filter id="dsFilter" width="150%" height="150%">
+      <feOffset result="offOut" in="SourceGraphic" dx="3" dy="3"/>
+      <feColorMatrix result="matrixOut" in="offOut" type="matrix" values="0.2 0 0 0 0 0 0.2 0 0 0 0 0 0.2 0 0 0 0 0 1 0"/>
+      <feBlend in="SourceGraphic" in2="matrixOut" mode="normal"/>
+    </filter>
+    <marker id="iPointer"
+      viewBox="0 0 10 10" refX="5" refY="5" 
+      markerUnits="strokeWidth"
+      markerWidth="8" markerHeight="7"
+      orient="auto">
+      <path d="M 10 0 L 10 10 L 0 5 z" />
+    </marker>
+    <marker id="Pointer"
+      viewBox="0 0 10 10" refX="5" refY="5" 
+      markerUnits="strokeWidth"
+      markerWidth="8" markerHeight="7"
+      orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" />
+    </marker>
+  </defs><g id="boxes" stroke="black" stroke-width="2" fill="none" >
+<g id="group0">
+	<path id="path0" filter="url(#dsFilter)" fill="#fff" d="M 247.5 18 Q 247.5 8 257.5 8 L 444.5 8 Q 454.5 8 454.5 18 L 454.5 62 Q 454.5 72 444.5 72 L 257.5 72 Q 247.5 72 247.5 62 Z" />
+	<text x="251.1" y="28.8" id="text0" fill="#000" stroke="none" style="font-family:LMMono10,monospace;font-size:15.2px" >C</text>
+
+	<text x="269.1" y="28.8" id="text0" fill="#000" stroke="none" style="font-family:LMMono10,monospace;font-size:15.2px" >serialization code </text>
+
+	<text x="251.1" y="44.8" id="text0" fill="#000" stroke="none" style="font-family:LMMono10,monospace;font-size:15.2px" >trace format test app </text>
+
+	<text x="251.1" y="60.8" id="text0" fill="#000" stroke="none" style="font-family:LMMono10,monospace;font-size:15.2px" >Python decoder class </text>
+
+</g>
+<g id="group2">
+	<path id="path2" filter="url(#dsFilter)" fill="#fff" d="M 4.5 34 Q 4.5 24 14.5 24 L 102.5 24 Q 112.5 24 112.5 34 L 112.5 46 Q 112.5 56 102.5 56 L 14.5 56 Q 4.5 56 4.5 46 Z" />
+	<text x="8.1" y="44.8" id="text2" fill="#000" stroke="none" style="font-family:LMMono10,monospace;font-size:15.2px" >GSL scripts </text>
+
+</g>
+<g id="group4">
+	<path id="path4" filter="url(#dsFilter)" fill="#fff" d="M 157.5 24 L 193.5 24 L 193.5 56 L 157.5 56 Z" />
+	<text x="161.1" y="44.8" id="text4" fill="#000" stroke="none" style="font-family:LMMono10,monospace;font-size:15.2px" >GSL </text>
+
+</g>
+<g id="group14">
+	<path id="path14" filter="url(#dsFilter)" fill="#fff" d="M 130.5 114 Q 130.5 104 140.5 104 L 210.5 104 Q 220.5 104 220.5 114 L 220.5 126 Q 220.5 136 210.5 136 L 140.5 136 Q 130.5 136 130.5 126 Z" />
+	<text x="134.1" y="124.8" id="text14" fill="#000" stroke="none" style="font-family:LMMono10,monospace;font-size:15.2px" >XML model </text>
+
+</g>
+</g>
+<g id="lines" stroke="black" stroke-width="2" fill="none" >
+<g id="group140">
+	<path id="path140" marker-end="url(#Pointer)" d="M 112.5 40 L 148.5 40 " />
+</g>
+<g id="group213">
+	<path id="path213" marker-start="url(#iPointer)" d="M 175.5 72 L 175.5 104 " />
+</g>
+<g id="group231">
+	<path id="path231" marker-end="url(#Pointer)" d="M 193.5 40 L 238.5 40 " />
+</g>
+</g>
+<g id="text" fill="black" style="font-family:LMMono10,monospace;font-size:15.2px" >
+</g>
+</svg>
