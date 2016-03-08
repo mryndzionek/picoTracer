@@ -1,5 +1,74 @@
+    <!-- 
+        trace - the root element containing all trace message definitions
+        =================================================================
+        Supported option attributes:
+
+            level - the default tracing level - one of: TRACE|DEBUG|INFO|WARN|ERROR - default: INFO
+
+            length - the ring buffer RAM size - mandatory parameter - generates error when not set
+
+            filtering - filtering of messages - one of: static|dynamic - default: static
+                        static - the disabling of messages happens at compile time
+                        dynamic - runtime tracing level control
+
+            crc - own CRC function - when set the generated code references a function 
+                  that should be defined in the platform file
+
+            crc_size - mandatory when own CRC function is set - default: 1
+
+            block_size - limits the size of temporary stack buffer for each message -
+                         default: 64 - not less than 2*(7 + crc_size)
+
+        enum - enum values definitions
+        ==============================
+        Supported option attributes:
+
+            name - symbolic name of the enum type
+
+            size - size of the enum value in bytes - one of: 1|2|4|8
+
+
+        entry - enum value definition
+        =============================
+        Required attributes:
+
+            key - the numerical value
+
+            value - the symbolic representation
+            
+
+        msg - the message definition element
+        ====================================
+        Supported option attributes:
+
+            id - symbolic unique identity of the message
+
+            level - message tracing level - one of: TRACE|DEBUG|INFO|WARN|ERROR
+
+            format - Python string format - https://docs.python.org/2/library/string.html#format-string-syntax
+
+            alias - optional element pointing to previously defined message id
+                    signifies the fact that the current message differs only with the format option
+
+        arg - the trace message argument definition
+        ===========================================
+        Supported option attributes:
+
+            name - name of the argument
+            type - type of the argument - one of: number|enum
+            size - size of the argument in bytes - one of: 1|2|4|8
+
+
+        Sizes map to C types as follows:
+            1 - uint8_t
+            2 - uint16_t
+            4 - uint32_t
+            8 - uint64_t
+
+    -->
+
 <trace level = "DEBUG" length="256" filtering="dynamic">
-    
+
     <enum name = "state" size = "2">
         <entry key = "0x0001" value = "M1_DISABLED"/>
         <entry key = "0x0002" value = "M1_ENABLED"/>
