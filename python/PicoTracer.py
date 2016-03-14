@@ -40,8 +40,8 @@ try:
         reader = TraceDecoder.FileTraceReader(breader, 1000)
 
     try:
-        ts_prefix = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        wname = ts_prefix + '-' + os.path.basename(args.path) + '.csv'
+        ts_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        wname = os.path.basename(args.path) + '.csv'
         logging.info('Opening output file: ' + wname)
         bwriter = open(wname, 'wb')
         exporter = TraceDecoder.CSVTraceExporter(bwriter)
@@ -51,6 +51,7 @@ try:
         finally:
             logging.debug('Closing the writer')
             bwriter.close()
+            os.rename(bwriter.name, ts_str + '-' + os.path.basename(bwriter.name) +  '.csv')
     finally:
         logging.debug('Closing the reader')
         breader.close()
