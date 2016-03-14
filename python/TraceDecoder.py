@@ -1,4 +1,4 @@
-import sys
+import os, sys
 import struct
 import logging
 import binascii
@@ -75,6 +75,11 @@ class TraceExporter(object):
             self.writer.flush()
 
 class CSVTraceExporter(TraceExporter):
+
+    def __init__(self, writer, header = None):
+        super(CSVTraceExporter, self).__init__(writer)
+        if header:
+            self.writer.write(header + os.linesep)
 
     def _convert(self, ts, counter, timer, level, message, hex_str):
         self.writer.write('{0}, {1}, {2}, {3}, {4}, {5}\n'.format(

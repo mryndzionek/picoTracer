@@ -1,4 +1,5 @@
 import os, sys, re
+import fcntl
 import argparse
 import logging
 import serial
@@ -6,6 +7,8 @@ import datetime
 
 import TraceDecoder
 import TraceCfg
+
+_CSV_HEADER = 'timestamp, counter, epoch [ms], level, message, raw hex'
 
 parser = argparse.ArgumentParser(description='pictrace - trace decoder application')
 parser.add_argument('-i', '--input', choices=['file', 'serial'], default='serial')
@@ -31,6 +34,7 @@ try:
         if rs:
             breader = serial.Serial(rs.group(1), rs.group(2), timeout=None, bytesize=int(rs.group(3)),
                                 parity=rs.group(4), stopbits=int(rs.group(5)))
+            fcntl.flock(breader.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             reader = TraceDecoder.SerialTraceReader(breader, 1)
         else:
             raise ValueError('Wrong serial port format: ' + args.path)
@@ -44,7 +48,7 @@ try:
         wname = os.path.basename(args.path) + '.csv'
         logging.info('Opening output file: ' + wname)
         bwriter = open(wname, 'wb')
-        exporter = TraceDecoder.CSVTraceExporter(bwriter)
+        exporter = TraceDecoder.CSVTraceExporter(bwriter, _CSV_HEADER)
         try:
             decoder = TraceDecoder.TraceDecoder(reader, exporter, TraceCfg.TraceCfg)
             decoder.decode()
