@@ -50,11 +50,18 @@ The ASCII figures are converted to graphics using [ASCIIToSVG](https://bitbucket
 
 Build instructions
 ------------------
-Standard CMake routine:
+Standard CMake routine.
+
+Project setup:
 ```sh
+./bootstrap.sh
 mkdir build
 cd build
 cmake ..
+```
+
+Build step:
+```sh
 make
 make test
 ```
