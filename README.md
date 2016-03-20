@@ -5,11 +5,12 @@ Introduction
 ------------
 The main aim of this project is to create less intrusive alternative to traditional
 software tracing/logging methods. It is achieved by decoupling data gathering from
-data transmission. The trace messages are gathered in a RAM ring buffer. This buffer
+data transmission. The trace messages are collected in a RAM ring buffer. This buffer
 can be drained bit-by-bit at times when processing power is available (idle state).
 This design plays very well with "run-to-completion" semantics of state machines.
 The trace message format is flexible and can be highly application context specific 
-and therefore significantly simplify further trace analysis.
+and therefore significantly simplify trace analysis. No dynamic memory allocations
+in generated code make it easy to integrate into embedded targets. 
 
 Structure of the project
 ------------------------
@@ -67,6 +68,7 @@ TODO
   - [x] Implement integrity checking
   - [ ] Add different serialization strategies
   - [x] Limit temporary buffers size
+  - [ ] Refactor the C code generator
 
 License
 -------
