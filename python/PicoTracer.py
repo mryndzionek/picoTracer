@@ -55,7 +55,7 @@ try:
         finally:
             logging.debug('Closing the writer')
             bwriter.close()
-            os.rename(bwriter.name, ts_str + '-' + os.path.basename(bwriter.name) +  '.csv')
+            os.rename(bwriter.name, ts_str + '-' + os.path.basename(bwriter.name))
     finally:
         logging.debug('Closing the reader')
         breader.close()
