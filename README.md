@@ -15,12 +15,12 @@ in generated code make it easy to integrate into embedded targets.
 Structure of the project
 ------------------------
 
-![fig1](../blob/master/images/fig1.png)
+![fig1](https://github.com/mryndzionek/picoTracer/raw/master/images/fig1.png)
 
 Protocol specification
 ----------------------
 
-![fig2](../blob/master/images/fig2.png)
+![fig2](https://github.com/mryndzionek/picoTracer/raw/master/images/fig2.png)
 
 Syntax in ABNF format:
 ```
