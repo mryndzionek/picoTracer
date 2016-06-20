@@ -40,7 +40,7 @@ This is reflected in the HDLC rule - the FLAG octet is escaped.
 
 XML model format
 ----------------
-The basic description can be found [here](../blob/master/models/fsm.xml).
+The basic description can be found [here](https://github.com/mryndzionek/picoTracer/raw/master/models/fsm.xml).
 
 Dependencies
 ------------
