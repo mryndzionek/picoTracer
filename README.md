@@ -83,7 +83,7 @@ License
 
 Acknowledgments
 ---------------
-  - (MpicoSys)[http://www.mpicosys.com/] for letting me implement this project as my 10% time activity
+  - [MpicoSys](http://www.mpicosys.com/) for letting me implement this project as my 10% time activity
 
 Contact
 -------
